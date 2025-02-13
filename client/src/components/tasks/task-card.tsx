@@ -22,18 +22,29 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
   const isCompleted = task.status === "completed";
 
   return (
-    <Card className={`w-full ${isCompleted ? 'opacity-70' : ''}`}>
+    <Card className={`w-full ${isCompleted ? 'opacity-70 bg-gray-50' : ''}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{task.title}</CardTitle>
-        <Badge
-          variant="outline"
-          className={priorityColors[task.priority as keyof typeof priorityColors]}
-        >
-          {task.priority}
-        </Badge>
+        <CardTitle className={`text-sm font-medium ${isCompleted ? 'line-through' : ''}`}>
+          {task.title}
+        </CardTitle>
+        <div className="flex items-center gap-2">
+          {isCompleted && (
+            <Badge variant="outline" className="text-green-500 border-green-500">
+              Completed
+            </Badge>
+          )}
+          <Badge
+            variant="outline"
+            className={priorityColors[task.priority as keyof typeof priorityColors]}
+          >
+            {task.priority}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">{task.description}</p>
+        <p className={`text-sm text-muted-foreground ${isCompleted ? 'line-through' : ''}`}>
+          {task.description}
+        </p>
         {task.dueDate && (
           <p className="text-xs text-muted-foreground mt-2">
             Due: {format(new Date(task.dueDate), "PPP")}

@@ -21,7 +21,11 @@ export default function Tasks() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/tasks/${id}`);
+      const response = await apiRequest("DELETE", `/api/tasks/${id}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete task");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/1"] });
@@ -37,7 +41,12 @@ export default function Tasks() {
 
   const completeMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("PATCH", `/api/tasks/${id}`, { status: "completed" });
+      const response = await apiRequest("PATCH", `/api/tasks/${id}`, { status: "completed" });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to complete task");
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/1"] });
@@ -65,7 +74,7 @@ export default function Tasks() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="all">All Tasks</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
@@ -86,7 +95,11 @@ export default function Tasks() {
               key={task.id}
               task={task}
               onEdit={setSelectedTask}
-              onDelete={(id) => deleteMutation.mutate(id)}
+              onDelete={(id) => {
+                if (window.confirm('Are you sure you want to delete this task?')) {
+                  deleteMutation.mutate(id);
+                }
+              }}
               onComplete={(id) => completeMutation.mutate(id)}
             />
           ))}

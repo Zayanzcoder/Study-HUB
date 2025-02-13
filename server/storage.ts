@@ -2,7 +2,7 @@ import { IStorage } from "./types";
 import { User, Task, Note, InsertUser, InsertTask, InsertNote } from "@shared/schema";
 import { users, tasks, notes } from "@shared/schema";
 import { db } from "./db";
-import { eq, or, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
@@ -52,12 +52,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(notes)
-      .where(
-        or(
-          eq(notes.userId, userId),
-          eq(notes.isPublic, true)
-        )
-      );
+      .where(eq(notes.userId, userId));
   }
 
   async updateNote(id: number, updates: Partial<Note>): Promise<Note> {
