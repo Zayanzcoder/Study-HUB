@@ -86,12 +86,18 @@ export function registerRoutes(app: Express) {
       const { prompt } = z.object({ prompt: z.string() }).parse(req.body);
       const response = await getAIResponse(prompt);
       res.json({ response });
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI chat error:", error);
       if (error.status === 429) {
-        res.status(503).json({ error: "AI service is currently unavailable. Please try again later." });
+        res.status(503).json({ 
+          error: "AI service is currently unavailable", 
+          message: error.message 
+        });
       } else {
-        res.status(400).json({ error: "Invalid request" });
+        res.status(400).json({ 
+          error: "Failed to process request",
+          message: error.message || "An unexpected error occurred"
+        });
       }
     }
   });

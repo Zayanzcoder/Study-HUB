@@ -21,8 +21,13 @@ export async function getAIResponse(prompt: string): Promise<string> {
     });
 
     return response.choices[0].message.content || "I'm not sure how to help with that.";
-  } catch (error) {
+  } catch (error: any) {
     console.error("OpenAI API error:", error);
+
+    if (error.status === 429) {
+      throw new Error("The AI service is temporarily unavailable due to high demand. Please try again in a few minutes.");
+    }
+
     return "Sorry, I'm having trouble processing your request right now.";
   }
 }
