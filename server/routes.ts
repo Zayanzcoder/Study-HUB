@@ -18,12 +18,19 @@ export function registerRoutes(app: Express) {
   app.use(passport.session());
 
   app.get('/auth/google',
-    passport.authenticate('google', { scope: ['profile', 'email'] })
+    passport.authenticate('google', { 
+      scope: ['profile', 'email'],
+      prompt: 'select_account'
+    })
   );
 
   app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/' }),
+    passport.authenticate('google', { 
+      failureRedirect: '/',
+      failureMessage: true
+    }),
     (req, res) => {
+      console.log('Google auth successful');
       res.redirect('/dashboard');
     }
   );
