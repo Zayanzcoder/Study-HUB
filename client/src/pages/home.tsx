@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -16,9 +15,6 @@ export default function Home() {
           >
             StudyHub
           </motion.h1>
-          <div className="space-x-4">
-            <LoginButton />
-          </div>
         </nav>
 
         <motion.div 
@@ -29,9 +25,7 @@ export default function Home() {
         >
           <h2 className="text-5xl font-bold text-white mb-6">Your Personal Study Assistant</h2>
           <p className="text-xl text-gray-300 mb-8">Organize tasks, take notes, and get AI help - all in one place</p>
-          <div className="space-x-4">
-            <LoginButton />
-          </div>
+          <LoginButton />
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-16">
