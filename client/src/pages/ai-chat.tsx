@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import ChatWindow from "@/components/chat/chat-window";
 import { apiRequest } from "@/lib/queryClient";
 import { Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type Message = {
   id: number;
@@ -14,6 +15,7 @@ type Message = {
 };
 
 export default function AIChat() {
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
 
@@ -27,6 +29,21 @@ export default function AIChat() {
         ...prev,
         { id: prev.length + 2, content: data.response, isUser: false },
       ]);
+    },
+    onError: (error) => {
+      setMessages((prev) => [
+        ...prev,
+        { 
+          id: prev.length + 2, 
+          content: "I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.", 
+          isUser: false 
+        },
+      ]);
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again later.",
+        variant: "destructive",
+      });
     },
   });
 

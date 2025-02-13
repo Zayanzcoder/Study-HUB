@@ -41,20 +41,28 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
   const [date, setDate] = useState<Date | undefined>();
 
   const form = useForm({
-    resolver: zodResolver(insertTaskSchema.extend({
-      dueDate: insertTaskSchema.shape.dueDate.optional(),
-    })),
+    resolver: zodResolver(
+      insertTaskSchema.extend({
+        dueDate: insertTaskSchema.shape.dueDate.optional(),
+        status: insertTaskSchema.shape.status.default("pending"),
+      })
+    ),
     defaultValues: {
       title: "",
       description: "",
       priority: "medium",
       userId: 1, // Hardcoded for demo
+      status: "pending",
     },
   });
 
   const createTask = useMutation({
     mutationFn: async (values: any) => {
-      const res = await apiRequest("POST", "/api/tasks", values);
+      const formattedValues = {
+        ...values,
+        dueDate: date ? new Date(date).toISOString() : null,
+      };
+      const res = await apiRequest("POST", "/api/tasks", formattedValues);
       return res.json();
     },
     onSuccess: () => {
@@ -62,14 +70,19 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
       onOpenChange(false);
       toast({ title: "Task created successfully" });
       form.reset();
+      setDate(undefined);
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to create task", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
   function onSubmit(values: any) {
-    createTask.mutate({
-      ...values,
-      dueDate: date?.toISOString(),
-    });
+    createTask.mutate(values);
   }
 
   return (
@@ -100,7 +113,7 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Task description" {...field} />
+                    <Textarea placeholder="Task description" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -154,8 +167,8 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
                 </PopoverContent>
               </Popover>
             </FormItem>
-            <Button type="submit" className="w-full">
-              Create Task
+            <Button type="submit" className="w-full" disabled={createTask.isPending}>
+              {createTask.isPending ? "Creating..." : "Create Task"}
             </Button>
           </form>
         </Form>

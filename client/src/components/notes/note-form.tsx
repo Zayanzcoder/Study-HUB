@@ -48,6 +48,13 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
       toast({ title: "Note created successfully" });
       form.reset();
     },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to create note", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
   });
 
   function onSubmit(values: any) {
@@ -82,7 +89,12 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <NoteEditor value={field.value} onChange={field.onChange} />
+                    <NoteEditor 
+                      value={field.value} 
+                      onChange={(value) => {
+                        field.onChange(value);
+                      }} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -108,8 +120,12 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Create Note
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={createNote.isPending}
+            >
+              {createNote.isPending ? "Creating..." : "Create Note"}
             </Button>
           </form>
         </Form>
