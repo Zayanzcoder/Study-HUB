@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { getAIResponse } from "./ai";
 import { insertTaskSchema, insertNoteSchema } from "@shared/schema";
 import { z } from "zod";
+import { getUserFromRequest } from "./auth";
 
 export function registerRoutes(app: Express) {
   app.post("/api/tasks", async (req, res) => {
