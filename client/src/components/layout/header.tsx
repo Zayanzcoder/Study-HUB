@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@shared/schema";
 import { useState, useEffect } from 'react';
 import { LoginButton } from "../ui/login-button";
+import { useLocation } from "wouter";
 
 interface HeaderProps {
   onLogout: () => void;
@@ -17,6 +18,7 @@ interface HeaderProps {
 
 export function Header({ onLogout }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     async function getUser() {
@@ -32,6 +34,11 @@ export function Header({ onLogout }: HeaderProps) {
     }
     getUser();
   }, []);
+
+  const handleLogout = () => {
+    onLogout();
+    setLocation('/');
+  };
 
   return (
     <header className="border-b">
@@ -56,7 +63,7 @@ export function Header({ onLogout }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onLogout}>
+                <DropdownMenuItem onClick={handleLogout}>
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
