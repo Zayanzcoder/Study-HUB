@@ -1,15 +1,14 @@
+
 import { Button } from "./button";
 
 export function LoginButton() {
   const handleLogin = () => {
-    const loginButton = document.createElement('div');
-    loginButton.innerHTML = '<div class="auth-button-container"><script src="https://auth.util.repl.co/script.js"></script></div>';
-    document.body.appendChild(loginButton);
+    window.location.href = '/auth/google';
   };
 
   return (
     <Button onClick={handleLogin} variant="outline">
-      Login with Replit
+      Login with Google
     </Button>
   );
 }

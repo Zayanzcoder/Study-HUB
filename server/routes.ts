@@ -1,11 +1,42 @@
 import type { Express } from "express";
 import { createServer } from "http";
+import passport from 'passport';
+import session from 'express-session';
 import { storage } from "./storage";
 import { getAIResponse } from "./ai";
 import { insertTaskSchema, insertNoteSchema } from "@shared/schema";
 import { z } from "zod";
 
 export function registerRoutes(app: Express) {
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false
+  }));
+  
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  app.get('/auth/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+  );
+
+  app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/' }),
+    (req, res) => {
+      res.redirect('/dashboard');
+    }
+  );
+
+  app.get('/auth/logout', (req, res) => {
+    req.logout(() => {
+      res.redirect('/');
+    });
+  });
+
+  app.get('/api/user', (req, res) => {
+    res.json(req.user || null);
+  });
   app.post("/api/tasks", async (req, res) => {
     try {
       const task = insertTaskSchema.parse(req.body);
