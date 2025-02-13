@@ -13,7 +13,8 @@ function Router() {
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={Dashboard} />
+        <Route path="/" component={Home} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/tasks" component={Tasks} />
         <Route path="/notes" component={Notes} />
         <Route path="/ai-chat" component={AIChat} />

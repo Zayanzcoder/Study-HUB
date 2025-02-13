@@ -10,10 +10,10 @@ import {
 import { ListTodo, StickyNote, MessageSquare, Home } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: Home },
+  { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/notes", label: "Notes", icon: StickyNote },
-  { href: "/chat", label: "AI Chat", icon: MessageSquare },
+  { href: "/ai-chat", label: "AI Chat", icon: MessageSquare },
 ];
 
 export default function Navbar() {
