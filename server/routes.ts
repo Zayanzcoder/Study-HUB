@@ -35,6 +35,19 @@ export function registerRoutes(app: Express) {
     }
   );
 
+  app.get('/auth/status', (req, res) => {
+    res.json({ 
+      authenticated: req.isAuthenticated(),
+      user: req.user 
+    });
+  });
+
+  app.get('/auth/logout', (req, res) => {
+    req.logout(() => {
+      res.redirect('/');
+    });
+  });
+
   app.get('/auth/logout', (req, res) => {
     req.logout(() => {
       res.redirect('/');
