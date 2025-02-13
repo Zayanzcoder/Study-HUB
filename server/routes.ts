@@ -12,7 +12,8 @@ export function registerRoutes(app: Express) {
       const created = await storage.createTask(task);
       res.json(created);
     } catch (error) {
-      res.status(400).json({ error: "Invalid task data" });
+      console.error("Task creation error:", error);
+      res.status(400).json({ error: "Invalid task data", details: error.message });
     }
   });
 
@@ -22,11 +23,10 @@ export function registerRoutes(app: Express) {
     res.json(tasks);
   });
 
-  app.patch("/api/tasks/:id", async (req, res) => {
+  app.patch("/api/tasks/:id/complete", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = req.body;
-      const updated = await storage.updateTask(id, updates);
+      const updated = await storage.updateTask(id, { status: "completed" });
       res.json(updated);
     } catch (error) {
       res.status(404).json({ error: "Task not found" });
@@ -49,7 +49,8 @@ export function registerRoutes(app: Express) {
       const created = await storage.createNote(note);
       res.json(created);
     } catch (error) {
-      res.status(400).json({ error: "Invalid note data" });
+      console.error("Note creation error:", error);
+      res.status(400).json({ error: "Invalid note data", details: error.message });
     }
   });
 
@@ -86,7 +87,12 @@ export function registerRoutes(app: Express) {
       const response = await getAIResponse(prompt);
       res.json({ response });
     } catch (error) {
-      res.status(400).json({ error: "Invalid request" });
+      console.error("AI chat error:", error);
+      if (error.status === 429) {
+        res.status(503).json({ error: "AI service is currently unavailable. Please try again later." });
+      } else {
+        res.status(400).json({ error: "Invalid request" });
+      }
     }
   });
 

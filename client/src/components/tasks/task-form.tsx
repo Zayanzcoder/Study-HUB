@@ -58,12 +58,19 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
 
   const createTask = useMutation({
     mutationFn: async (values: any) => {
-      const formattedValues = {
-        ...values,
-        dueDate: date ? new Date(date).toISOString() : null,
-      };
-      const res = await apiRequest("POST", "/api/tasks", formattedValues);
-      return res.json();
+      try {
+        const formattedValues = {
+          ...values,
+          dueDate: date ? new Date(date).toISOString() : null,
+          description: values.description || null, // Ensure null for empty description
+        };
+        const res = await apiRequest("POST", "/api/tasks", formattedValues);
+        const data = await res.json();
+        return data;
+      } catch (error) {
+        console.error("Task creation error:", error);
+        throw new Error(error.message || "Failed to create task");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/1"] });
@@ -72,7 +79,7 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
       form.reset();
       setDate(undefined);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({ 
         title: "Failed to create task", 
         description: error.message,
@@ -113,7 +120,11 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Task description" {...field} value={field.value || ''} />
+                    <Textarea 
+                      placeholder="Task description" 
+                      {...field} 
+                      value={field.value || ''} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
