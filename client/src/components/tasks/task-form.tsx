@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { insertTaskSchema } from "@shared/schema";
+import { insertTaskSchema, Task } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,13 +32,15 @@ import { format } from "date-fns";
 interface TaskFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  task?: Task | null;
 }
 
 const priorities = ["low", "medium", "high"] as const;
 
-export function TaskForm({ open, onOpenChange }: TaskFormProps) {
+export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>();
+  const isEditing = !!task;
 
   const form = useForm({
     resolver: zodResolver(insertTaskSchema),
@@ -52,7 +54,23 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
     },
   });
 
-  const createTask = useMutation({
+  useEffect(() => {
+    if (task) {
+      form.reset({
+        title: task.title,
+        description: task.description || "",
+        priority: task.priority,
+        status: task.status,
+        userId: task.userId,
+        dueDate: task.dueDate,
+      });
+      if (task.dueDate) {
+        setDate(new Date(task.dueDate));
+      }
+    }
+  }, [task]);
+
+  const mutation = useMutation({
     mutationFn: async (values: any) => {
       try {
         const formattedValues = {
@@ -61,42 +79,45 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
           description: values.description || null,
         };
 
-        const res = await apiRequest("POST", "/api/tasks", formattedValues);
+        const method = isEditing ? "PATCH" : "POST";
+        const endpoint = isEditing ? `/api/tasks/${task.id}` : "/api/tasks";
+
+        const res = await apiRequest(method, endpoint, formattedValues);
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.details || "Failed to create task");
+          throw new Error(errorData.details || `Failed to ${isEditing ? 'update' : 'create'} task`);
         }
         return res.json();
       } catch (error: any) {
-        console.error("Task creation error:", error);
+        console.error("Task mutation error:", error);
         throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/1"] });
       onOpenChange(false);
-      toast({ title: "Task created successfully" });
+      toast({ title: `Task ${isEditing ? 'updated' : 'created'} successfully` });
       form.reset();
       setDate(undefined);
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to create task",
-        description: error.message || "An error occurred while creating the task",
+        title: `Failed to ${isEditing ? 'update' : 'create'} task`,
+        description: error.message || `An error occurred while ${isEditing ? 'updating' : 'creating'} the task`,
         variant: "destructive",
       });
     },
   });
 
   function onSubmit(values: any) {
-    createTask.mutate(values);
+    mutation.mutate(values);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Task</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Task' : 'Add New Task'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -181,9 +202,9 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
             <Button
               type="submit"
               className="w-full"
-              disabled={createTask.isPending}
+              disabled={mutation.isPending}
             >
-              {createTask.isPending ? "Creating..." : "Create Task"}
+              {mutation.isPending ? `${isEditing ? 'Updating' : 'Creating'}...` : isEditing ? 'Update Task' : 'Create Task'}
             </Button>
           </form>
         </Form>
