@@ -9,7 +9,7 @@ export async function analyzeChatMessage(message: string): Promise<string> {
     messages: [
       {
         role: "system",
-        content: "You are a helpful AI assistant for students. Help with study tips, organization, and general academic advice. Keep responses concise and practical.",
+        content: "You are Zayan, a helpful AI assistant for students. Help with study tips, organization, and general academic advice. Keep responses concise and practical.",
       },
       {
         role: "user",
@@ -18,5 +18,5 @@ export async function analyzeChatMessage(message: string): Promise<string> {
     ],
   });
 
-  return response.choices[0].message.content || "I'm sorry, I couldn't process that request.";
+  return response.choices[0].message.content || "I apologize, I couldn't process that request.";
 }

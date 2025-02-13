@@ -22,15 +22,11 @@ function Router() {
       .catch(console.error);
   }, []);
 
-  // Show home page only if not authenticated and not a guest
-  if (!isAuthenticated && !isGuest) {
-    return <Home />;
-  }
-
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={Dashboard} />
+        <Route path="/" component={Home} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/tasks" component={Tasks} />
         <Route path="/notes" component={Notes} />
         <Route path="/ai-chat" component={AIChat} />

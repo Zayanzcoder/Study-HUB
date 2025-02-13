@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "./card";
 import { User, MessageSquare } from "lucide-react";
+import { ReactNode } from "react";
 
 interface ChatBubbleProps {
-  message: string;
+  message: ReactNode;
   isAI?: boolean;
   className?: string;
 }
@@ -24,7 +25,7 @@ export function ChatBubble({ message, isAI = false, className }: ChatBubbleProps
           ) : (
             <User className="h-6 w-6 text-accent" />
           )}
-          <p className="text-sm">{message}</p>
+          <div className="text-sm">{message}</div>
         </div>
       </CardContent>
     </Card>
