@@ -17,6 +17,7 @@ export function LoginButton() {
   };
 
   const handleGuestAccess = () => {
+    localStorage.setItem('isGuest', 'true');
     setLocation('/dashboard');
   };
 
