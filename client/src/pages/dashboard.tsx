@@ -54,12 +54,12 @@ export default function Dashboard() {
   }));
 
   const handleExitGuestMode = () => {
-    window.location.href = '/';
+    window.location.replace('/');
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    window.location.href = '/';
+    window.location.replace('/');
   };
 
   return (
