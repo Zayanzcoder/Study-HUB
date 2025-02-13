@@ -19,6 +19,7 @@ interface HeaderProps {
 export function Header({ onLogout }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [, setLocation] = useLocation();
+  const isGuest = localStorage.getItem('isGuest') === 'true';
 
   useEffect(() => {
     async function getUser() {
@@ -37,6 +38,7 @@ export function Header({ onLogout }: HeaderProps) {
 
   const handleLogout = () => {
     onLogout();
+    localStorage.removeItem('isGuest'); // Clear guest status on logout
     setLocation('/');
   };
 
@@ -68,6 +70,10 @@ export function Header({ onLogout }: HeaderProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : isGuest ? (
+            <Button onClick={handleLogout} variant="ghost">
+              Exit Guest Mode
+            </Button>
           ) : (
             <LoginButton />
           )}
