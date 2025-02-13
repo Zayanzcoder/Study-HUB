@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 232 32% 14%;
+    --foreground: 0 0% 100%;
+    
+    --card: 232 32% 18%;
+    --card-foreground: 0 0% 100%;
+    
+    --popover: 232 32% 18%;
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: 243 100% 69%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 171 100% 37%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 232 32% 24%;
+    --muted-foreground: 0 0% 80%;
+    
+    --accent: 0 78% 70%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 232 32% 24%;
+    --input: 232 32% 24%;
+    --ring: 243 100% 69%;
+
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .glassmorphic {
+    @apply bg-opacity-20 backdrop-blur-lg backdrop-saturate-150 border border-white/10;
+  }
+}
+
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+/* Smooth transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Card hover effects */
+.card {
+  @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-200;
+}
+
+/* Neon accents */
+.neon-primary {
+  text-shadow: 0 0 10px theme('colors.primary.DEFAULT');
+}
+
+.neon-secondary {
+  text-shadow: 0 0 10px theme('colors.secondary.DEFAULT');
+}
+
+.neon-accent {
+  text-shadow: 0 0 10px theme('colors.accent.DEFAULT');
+}
+
+/* Glassmorphic components */
+.glass-card {
+  @apply bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/80;
+}
+
+/* Responsive typography */
+@screen sm {
+  h1 {
+    @apply text-4xl;
+  }
+  h2 {
+    @apply text-3xl;
+  }
+  h3 {
+    @apply text-2xl;
+  }
+}
+
+@screen lg {
+  h1 {
+    @apply text-5xl;
+  }
+  h2 {
+    @apply text-4xl;
+  }
+  h3 {
+    @apply text-3xl;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/50 rounded-full hover:bg-primary/70 transition-colors;
+}
