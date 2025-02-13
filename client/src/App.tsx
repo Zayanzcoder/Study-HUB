@@ -13,6 +13,7 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isGuest = localStorage.getItem('isGuest') === 'true';
 
   useEffect(() => {
     fetch('/auth/status')
@@ -21,7 +22,8 @@ function Router() {
       .catch(console.error);
   }, []);
 
-  if (!isAuthenticated) {
+  // Show home page only if not authenticated and not a guest
+  if (!isAuthenticated && !isGuest) {
     return <Home />;
   }
 
