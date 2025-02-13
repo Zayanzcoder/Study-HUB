@@ -16,18 +16,6 @@ interface HeaderProps {
 
 export function Header({ onLogout }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null);
-  
-  useEffect(() => {
-    // Check authentication status
-    fetch('/__replauthuser')
-      .then(res => res.json())
-      .then(userData => {
-        if (userData && userData.id) {
-          setUser(userData);
-        }
-      })
-      .catch(console.error);
-  }, []);
 
   useEffect(() => {
     async function getUser() {
