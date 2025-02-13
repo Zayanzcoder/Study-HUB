@@ -1,85 +1,78 @@
 import { IStorage } from "./types";
 import { User, Task, Note, InsertUser, InsertTask, InsertNote } from "@shared/schema";
+import { users, tasks, notes } from "@shared/schema";
+import { db } from "./db";
+import { eq, or, and } from "drizzle-orm";
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private tasks: Map<number, Task>;
-  private notes: Map<number, Note>;
-  private currentId: { users: number; tasks: number; notes: number };
-
-  constructor() {
-    this.users = new Map();
-    this.tasks = new Map();
-    this.notes = new Map();
-    this.currentId = { users: 1, tasks: 1, notes: 1 };
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId.users++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async createTask(insertTask: InsertTask): Promise<Task> {
-    const id = this.currentId.tasks++;
-    const task: Task = { ...insertTask, id };
-    this.tasks.set(id, task);
+    const [task] = await db.insert(tasks).values(insertTask).returning();
     return task;
   }
 
   async getUserTasks(userId: number): Promise<Task[]> {
-    return Array.from(this.tasks.values()).filter(
-      (task) => task.userId === userId,
-    );
+    return await db.select().from(tasks).where(eq(tasks.userId, userId));
   }
 
   async updateTask(id: number, updates: Partial<Task>): Promise<Task> {
-    const task = this.tasks.get(id);
+    const [task] = await db
+      .update(tasks)
+      .set(updates)
+      .where(eq(tasks.id, id))
+      .returning();
     if (!task) throw new Error("Task not found");
-    const updatedTask = { ...task, ...updates };
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
+    return task;
   }
 
   async deleteTask(id: number): Promise<void> {
-    this.tasks.delete(id);
+    await db.delete(tasks).where(eq(tasks.id, id));
   }
 
   async createNote(insertNote: InsertNote): Promise<Note> {
-    const id = this.currentId.notes++;
-    const note: Note = { ...insertNote, id };
-    this.notes.set(id, note);
+    const [note] = await db.insert(notes).values(insertNote).returning();
     return note;
   }
 
   async getUserNotes(userId: number): Promise<Note[]> {
-    return Array.from(this.notes.values()).filter(
-      (note) => note.userId === userId || note.sharedWith.includes(userId.toString()),
-    );
+    return await db
+      .select()
+      .from(notes)
+      .where(
+        or(
+          eq(notes.userId, userId),
+          eq(notes.isPublic, true)
+        )
+      );
   }
 
   async updateNote(id: number, updates: Partial<Note>): Promise<Note> {
-    const note = this.notes.get(id);
+    const [note] = await db
+      .update(notes)
+      .set(updates)
+      .where(eq(notes.id, id))
+      .returning();
     if (!note) throw new Error("Note not found");
-    const updatedNote = { ...note, ...updates };
-    this.notes.set(id, updatedNote);
-    return updatedNote;
+    return note;
   }
 
   async deleteNote(id: number): Promise<void> {
-    this.notes.delete(id);
+    await db.delete(notes).where(eq(notes.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
