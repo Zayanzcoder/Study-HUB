@@ -8,28 +8,28 @@
   :root {
     --background: 232 32% 14%;
     --foreground: 0 0% 100%;
-    
+
     --card: 232 32% 18%;
     --card-foreground: 0 0% 100%;
-    
+
     --popover: 232 32% 18%;
     --popover-foreground: 0 0% 100%;
-    
+
     --primary: 243 100% 69%;
     --primary-foreground: 0 0% 100%;
-    
+
     --secondary: 171 100% 37%;
     --secondary-foreground: 0 0% 100%;
-    
+
     --muted: 232 32% 24%;
     --muted-foreground: 0 0% 80%;
-    
+
     --accent: 0 78% 70%;
     --accent-foreground: 0 0% 100%;
-    
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+
     --border: 232 32% 24%;
     --input: 232 32% 24%;
     --ring: 243 100% 69%;
@@ -57,6 +57,43 @@
   code {
     font-family: 'JetBrains Mono', monospace;
   }
+}
+
+/* Dark mode prose styles */
+.prose {
+  @apply text-foreground;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  @apply text-foreground;
+}
+
+.prose p {
+  @apply text-foreground;
+}
+
+.prose strong {
+  @apply text-foreground;
+}
+
+.prose a {
+  @apply text-primary hover:text-primary/80;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary/50 text-foreground/90;
+}
+
+.prose ul, .prose ol {
+  @apply text-foreground;
+}
+
+.prose code {
+  @apply bg-muted text-foreground px-1 py-0.5 rounded;
+}
+
+.prose pre {
+  @apply bg-muted text-foreground;
 }
 
 @layer components {
