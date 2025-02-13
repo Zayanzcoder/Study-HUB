@@ -12,6 +12,8 @@ export default function Notes() {
   const { toast } = useToast();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [showAddNote, setShowAddNote] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false); // Added state for note form
+
 
   const { data: notes } = useQuery<Note[]>({
     queryKey: ["/api/notes/1"], // Hardcoded user ID for demo
@@ -26,6 +28,21 @@ export default function Notes() {
       toast({ title: "Note deleted" });
     },
   });
+
+  const handleShare = (note: Note) => {
+    // Create a shareable link
+    const shareUrl = `${window.location.origin}/notes/${note.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast({
+      title: "Link copied!",
+      description: "The note link has been copied to your clipboard.",
+    });
+  };
+
+  const handleEdit = (note: Note) => {
+    setSelectedNote(note);
+    setShowNoteForm(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -42,16 +59,19 @@ export default function Notes() {
           <NoteCard
             key={note.id}
             note={note}
-            onEdit={setSelectedNote}
+            onEdit={() => handleEdit(note)}
             onDelete={(id) => deleteMutation.mutate(id)}
-            onShare={() => {}}
+            onShare={() => handleShare(note)}
           />
         ))}
       </div>
 
       <NoteForm 
-        open={showAddNote} 
+        open={showAddNote || showNoteForm} 
         onOpenChange={setShowAddNote}
+        selectedNote={selectedNote}
+        setSelectedNote={setSelectedNote}
+        onClose={() => setShowNoteForm(false)} //Added close handler
       />
     </div>
   );
