@@ -9,6 +9,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@shared/schema";
 import { useState, useEffect } from 'react';
+import { LoginButton } from "../ui/login-button";
 
 interface HeaderProps {
   onLogout: () => void;
@@ -47,7 +48,7 @@ export function Header({ onLogout }: HeaderProps) {
                   className="relative h-8 w-8 rounded-full"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={user.avatar || undefined} alt={user.name} />
                     <AvatarFallback>
                       {user.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -61,7 +62,7 @@ export function Header({ onLogout }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button>Login</Button>
+            <LoginButton />
           )}
         </div>
       </div>
