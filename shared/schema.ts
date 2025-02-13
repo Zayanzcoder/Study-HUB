@@ -30,29 +30,18 @@ export const notes = pgTable("notes", {
   sharedWith: text("shared_with").array(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  email: true,
-  name: true,
-  avatar: true,
+export const insertUserSchema = createInsertSchema(users, {
+  avatar: z.string().nullable(),
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).pick({
-  userId: true,
-  title: true,
-  description: true,
-  dueDate: true,
-  priority: true,
-  status: true,
+export const insertTaskSchema = createInsertSchema(tasks, {
+  dueDate: z.string().nullable().transform((str) => str ? new Date(str) : null),
+  description: z.string().nullable(),
+  status: z.string().default("pending"),
 });
 
-export const insertNoteSchema = createInsertSchema(notes).pick({
-  userId: true,
-  title: true,
-  content: true,
-  isPublic: true,
-  sharedWith: true,
+export const insertNoteSchema = createInsertSchema(notes, {
+  sharedWith: z.array(z.string()).nullable(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

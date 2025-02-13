@@ -41,18 +41,14 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
   const [date, setDate] = useState<Date | undefined>();
 
   const form = useForm({
-    resolver: zodResolver(
-      insertTaskSchema.extend({
-        dueDate: insertTaskSchema.shape.dueDate.optional(),
-        status: insertTaskSchema.shape.status.default("pending"),
-      })
-    ),
+    resolver: zodResolver(insertTaskSchema),
     defaultValues: {
       title: "",
       description: "",
       priority: "medium",
-      userId: 1, // Hardcoded for demo
       status: "pending",
+      userId: 1, // Hardcoded for demo
+      dueDate: null,
     },
   });
 
@@ -61,15 +57,19 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
       try {
         const formattedValues = {
           ...values,
-          dueDate: date ? new Date(date).toISOString() : null,
-          description: values.description || null, // Ensure null for empty description
+          dueDate: date ? date.toISOString() : null,
+          description: values.description || null,
         };
+
         const res = await apiRequest("POST", "/api/tasks", formattedValues);
-        const data = await res.json();
-        return data;
-      } catch (error) {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.details || "Failed to create task");
+        }
+        return res.json();
+      } catch (error: any) {
         console.error("Task creation error:", error);
-        throw new Error(error.message || "Failed to create task");
+        throw error;
       }
     },
     onSuccess: () => {
@@ -79,11 +79,11 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
       form.reset();
       setDate(undefined);
     },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to create task", 
-        description: error.message,
-        variant: "destructive" 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to create task",
+        description: error.message || "An error occurred while creating the task",
+        variant: "destructive",
       });
     },
   });
@@ -178,7 +178,11 @@ export function TaskForm({ open, onOpenChange }: TaskFormProps) {
                 </PopoverContent>
               </Popover>
             </FormItem>
-            <Button type="submit" className="w-full" disabled={createTask.isPending}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={createTask.isPending}
+            >
               {createTask.isPending ? "Creating..." : "Create Task"}
             </Button>
           </form>
