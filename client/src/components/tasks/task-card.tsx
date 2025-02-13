@@ -21,6 +21,24 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
 
   const isCompleted = task.status === "completed";
 
+  const handleComplete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onComplete(task.id);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit(task);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete(task.id);
+  };
+
   return (
     <Card className={`w-full ${isCompleted ? 'opacity-70 bg-gray-50' : ''}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -55,7 +73,7 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onComplete(task.id)}
+              onClick={handleComplete}
               className="hover:bg-green-100 hover:text-green-700"
             >
               <Check className="h-4 w-4" />
@@ -63,7 +81,7 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onEdit(task)}
+              onClick={handleEdit}
               className="hover:bg-blue-100 hover:text-blue-700"
             >
               <Edit className="h-4 w-4" />
@@ -71,7 +89,7 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onDelete(task.id)}
+              onClick={handleDelete}
               className="hover:bg-red-100 hover:text-red-700"
             >
               <Trash2 className="h-4 w-4" />

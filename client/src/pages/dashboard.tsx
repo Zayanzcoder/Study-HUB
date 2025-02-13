@@ -54,7 +54,7 @@ export default function Dashboard() {
   }));
 
   const handleExitGuestMode = () => {
-    window.location.href = '/auth/google';
+    window.location.href = '/';
   };
 
   const handleLogout = () => {
@@ -81,12 +81,7 @@ export default function Dashboard() {
             </SelectContent>
           </Select>
 
-          {isGuest ? (
-            <Button onClick={handleExitGuestMode} variant="outline">
-              <LogOut className="h-4 w-4 mr-2" />
-              Exit Guest Mode
-            </Button>
-          ) : userInfo && (
+          {!isGuest && userInfo && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -121,6 +116,15 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {isGuest && (
+        <div className="flex justify-center mb-4">
+          <Button onClick={handleExitGuestMode} variant="outline" className="w-full max-w-sm">
+            <LogOut className="h-4 w-4 mr-2" />
+            Exit Guest Mode
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="text-center py-4">Loading...</div>
