@@ -39,8 +39,17 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
 
   const createNote = useMutation({
     mutationFn: async (values: any) => {
-      const res = await apiRequest("POST", "/api/notes", values);
-      return res.json();
+      try {
+        const res = await apiRequest("POST", "/api/notes", values);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.details || "Failed to create note");
+        }
+        return res.json();
+      } catch (error: any) {
+        console.error("Note creation error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notes/1"] });
@@ -48,16 +57,24 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
       toast({ title: "Note created successfully" });
       form.reset();
     },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to create note", 
-        description: error.message,
-        variant: "destructive" 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to create note",
+        description: error.message || "An error occurred while creating the note",
+        variant: "destructive",
       });
     },
   });
 
   function onSubmit(values: any) {
+    if (!values.content.trim()) {
+      toast({
+        title: "Note content required",
+        description: "Please add some content to your note",
+        variant: "destructive",
+      });
+      return;
+    }
     createNote.mutate(values);
   }
 
@@ -91,9 +108,8 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                   <FormControl>
                     <NoteEditor 
                       value={field.value} 
-                      onChange={(value) => {
-                        field.onChange(value);
-                      }} 
+                      onChange={field.onChange}
+                      disabled={createNote.isPending}
                     />
                   </FormControl>
                   <FormMessage />
@@ -115,6 +131,7 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      disabled={createNote.isPending}
                     />
                   </FormControl>
                 </FormItem>
