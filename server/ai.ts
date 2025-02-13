@@ -1,18 +1,23 @@
 
-const HUGGING_FACE_API_KEY = process.env.HUGGING_FACE_API_KEY;
-const MODEL_ID = "google/flan-t5-large"; // You can change this to any model you prefer
+const COHERE_API_KEY = process.env.COHERE_API_KEY;
 
 export async function getAIResponse(prompt: string): Promise<string> {
   try {
     const response = await fetch(
-      `https://api.huggingface.co/models/${MODEL_ID}`,
+      'https://api.cohere.ai/v1/generate',
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Authorization": `Bearer ${HUGGING_FACE_API_KEY}`,
-          "Content-Type": "application/json",
+          'Authorization': `Bearer ${COHERE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({ inputs: prompt }),
+        body: JSON.stringify({
+          model: 'command',
+          prompt: prompt,
+          max_tokens: 300,
+          temperature: 0.7,
+        })
       }
     );
 
@@ -21,14 +26,14 @@ export async function getAIResponse(prompt: string): Promise<string> {
     }
 
     const result = await response.json();
-    return result[0].generated_text || "I'm not sure how to help with that.";
+    return result.generations[0].text || "I'm not sure how to help with that.";
   } catch (error: any) {
     console.error("AI API error:", error);
-
+    
     if (error.status === 429) {
       throw new Error("The AI service is temporarily unavailable due to high demand. Please try again in a few minutes.");
     }
-
+    
     return "Sorry, I'm having trouble processing your request right now.";
   }
 }
