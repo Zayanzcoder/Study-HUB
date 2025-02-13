@@ -8,13 +8,30 @@ import {
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { User } from "@shared/schema";
+import { useState, useEffect } from 'react';
 
 interface HeaderProps {
-  user?: User;
   onLogout: () => void;
 }
 
-export function Header({ user, onLogout }: HeaderProps) {
+export function Header({ onLogout }: HeaderProps) {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    async function getUser() {
+      try {
+        const response = await fetch('/__replauthuser');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Failed to get user:', error);
+      }
+    }
+    getUser();
+  }, []);
+
   return (
     <header className="border-b">
       <div className="flex h-16 items-center px-4">
