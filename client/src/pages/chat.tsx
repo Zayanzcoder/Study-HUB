@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import ChatWindow from "@/components/chat/chat-window";
 import { apiRequest } from "@/lib/queryClient";
+import { Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type Message = {
   id: number;
@@ -13,12 +15,13 @@ type Message = {
 };
 
 export default function Chat() {
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
 
   const sendMessage = useMutation({
     mutationFn: async (message: string) => {
-      const res = await apiRequest("POST", "/api/chat", { message });
+      const res = await apiRequest("POST", "/api/ai/chat", { prompt: message });
       return res.json();
     },
     onSuccess: (data) => {
@@ -26,6 +29,21 @@ export default function Chat() {
         ...prev,
         { id: prev.length + 2, content: data.response, isUser: false },
       ]);
+    },
+    onError: (error: any) => {
+      setMessages((prev) => [
+        ...prev,
+        { 
+          id: prev.length + 2, 
+          content: "I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.", 
+          isUser: false 
+        },
+      ]);
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again later.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -42,7 +60,7 @@ export default function Chat() {
   };
 
   return (
-    <Card className="flex flex-col h-[calc(100vh-12rem)]">
+    <Card className="flex flex-col h-[calc(100vh-8rem)]">
       <ChatWindow messages={messages} />
       <form onSubmit={handleSubmit} className="p-4 border-t">
         <div className="flex gap-2">
@@ -53,7 +71,7 @@ export default function Chat() {
             disabled={sendMessage.isPending}
           />
           <Button type="submit" disabled={sendMessage.isPending}>
-            Send
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </form>
