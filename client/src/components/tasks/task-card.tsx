@@ -1,72 +1,73 @@
-import { useMutation } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { type Task } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
+import { Task } from "@shared/schema";
+import { format } from "date-fns";
+import { Trash2, Edit, Check } from "lucide-react";
 
-const priorityColors = {
-  low: "bg-blue-500",
-  medium: "bg-yellow-500",
-  high: "bg-red-500",
-};
-
-type TaskCardProps = {
+interface TaskCardProps {
   task: Task;
-};
+  onEdit: (task: Task) => void;
+  onDelete: (id: number) => void;
+  onComplete: (id: number) => void;
+}
 
-export default function TaskCard({ task }: TaskCardProps) {
-  const completeTask = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("PATCH", `/api/tasks/${task.id}/complete`);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-    },
-  });
+export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) {
+  const priorityColors = {
+    high: "text-red-500 border-red-500",
+    medium: "text-yellow-500 border-yellow-500",
+    low: "text-green-500 border-green-500",
+  };
+
+  const isCompleted = task.status === "completed";
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.2 }}
-      >
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">{task.title}</h3>
-              <Badge className={priorityColors[task.priority]}>
-                {task.priority}
-              </Badge>
-            </div>
-            {!task.completed && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => completeTask.mutate()}
-                disabled={completeTask.isPending}
-              >
-                Complete
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">{task.description}</p>
-            {task.dueDate && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Due: {format(new Date(task.dueDate), "PPP")}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-    </AnimatePresence>
+    <Card className={`w-full ${isCompleted ? 'opacity-70' : ''}`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{task.title}</CardTitle>
+        <Badge
+          variant="outline"
+          className={priorityColors[task.priority as keyof typeof priorityColors]}
+        >
+          {task.priority}
+        </Badge>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">{task.description}</p>
+        {task.dueDate && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Due: {format(new Date(task.dueDate), "PPP")}
+          </p>
+        )}
+        {!isCompleted && (
+          <div className="flex gap-2 mt-4">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onComplete(task.id)}
+              className="hover:bg-green-100 hover:text-green-700"
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onEdit(task)}
+              className="hover:bg-blue-100 hover:text-blue-700"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onDelete(task.id)}
+              className="hover:bg-red-100 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

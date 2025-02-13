@@ -1,17 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Task } from "@shared/schema";
-import { TaskCard } from "@/components/ui/task-card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { TaskCard } from "@/components/tasks/task-card";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ListTodo, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 export default function Dashboard() {
-  // For guest users, we'll show sample data
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const isGuest = !localStorage.getItem('user');
 
   const { data: tasks } = useQuery<Task[]>({
     queryKey: ["/api/tasks/1"],
-    enabled: !isGuest, // Only fetch if not a guest
+    enabled: !isGuest,
   });
 
   // Sample data for guest users
@@ -37,29 +39,52 @@ export default function Dashboard() {
   ] : [];
 
   const currentTasks = isGuest ? guestTasks : (tasks || []);
-  const upcomingTasks = currentTasks.filter(task => task.status === "pending").slice(0, 3);
+  const filteredTasks = priorityFilter === "all" 
+    ? currentTasks 
+    : currentTasks.filter(task => task.priority === priorityFilter);
+
+  const upcomingTasks = filteredTasks
+    .filter(task => task.status === "pending")
+    .sort((a, b) => new Date(a.dueDate || '').getTime() - new Date(b.dueDate || '').getTime())
+    .slice(0, 3);
+
   const completedTasks = currentTasks.filter(task => task.status === "completed").length;
   const pendingTasks = currentTasks.filter(task => task.status === "pending").length;
   const totalTasks = currentTasks.length;
 
-  const chartData = [
-    { name: 'Mon', completed: 4 },
-    { name: 'Tue', completed: 3 },
-    { name: 'Wed', completed: 5 },
-    { name: 'Thu', completed: 2 },
-    { name: 'Fri', completed: 6 },
-    { name: 'Sat', completed: 3 },
-    { name: 'Sun', completed: 4 },
-  ];
+  // Generate last 7 days data
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    return date;
+  }).reverse();
+
+  const chartData = last7Days.map(date => ({
+    name: date.toLocaleDateString('en-US', { weekday: 'short' }),
+    completed: Math.floor(Math.random() * 5) + 1, // Replace with actual data
+  }));
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">
-        {isGuest ? "Welcome Guest!" : "Welcome back!"}
-      </h1>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">
+          {isGuest ? "Welcome Guest!" : "Welcome back!"}
+        </h1>
+        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Priorities</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
             <ListTodo className="h-4 w-4 text-muted-foreground" />
@@ -69,33 +94,33 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedTasks}</div>
+            <div className="text-2xl font-bold text-green-500">{completedTasks}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingTasks}</div>
+            <div className="text-2xl font-bold text-yellow-500">{pendingTasks}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <AlertCircle className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-blue-500">
               {totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0}%
             </div>
           </CardContent>
@@ -103,35 +128,48 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Task Completion Trend</CardTitle>
           </CardHeader>
-          <CardContent>
-            <LineChart width={500} height={300} data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="completed" stroke="#8884d8" />
-            </LineChart>
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="completed" 
+                  stroke="#8884d8" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Upcoming Tasks</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {upcomingTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                onComplete={() => {}}
-              />
-            ))}
+            {upcomingTasks.length > 0 ? (
+              upcomingTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                  onComplete={() => {}}
+                />
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center">No upcoming tasks</p>
+            )}
           </CardContent>
         </Card>
       </div>
