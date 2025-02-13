@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Note } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { NoteCard } from "@/components/ui/note-card";
+import { NoteForm } from "@/components/notes/note-form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Notes() {
   const { toast } = useToast();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [showAddNote, setShowAddNote] = useState(false);
 
   const { data: notes } = useQuery<Note[]>({
     queryKey: ["/api/notes/1"], // Hardcoded user ID for demo
@@ -29,7 +31,7 @@ export default function Notes() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Notes</h1>
-        <Button>
+        <Button onClick={() => setShowAddNote(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Note
         </Button>
@@ -46,6 +48,11 @@ export default function Notes() {
           />
         ))}
       </div>
+
+      <NoteForm 
+        open={showAddNote} 
+        onOpenChange={setShowAddNote}
+      />
     </div>
   );
 }

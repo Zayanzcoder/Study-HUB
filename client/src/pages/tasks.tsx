@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Task } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/ui/task-card";
+import { TaskForm } from "@/components/tasks/task-form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Tasks() {
   const { toast } = useToast();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showAddTask, setShowAddTask] = useState(false);
 
   const { data: tasks } = useQuery<Task[]>({
     queryKey: ["/api/tasks/1"], // Hardcoded user ID for demo
@@ -39,7 +41,7 @@ export default function Tasks() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Tasks</h1>
-        <Button>
+        <Button onClick={() => setShowAddTask(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Task
         </Button>
@@ -56,6 +58,11 @@ export default function Tasks() {
           />
         ))}
       </div>
+
+      <TaskForm 
+        open={showAddTask} 
+        onOpenChange={setShowAddTask}
+      />
     </div>
   );
 }

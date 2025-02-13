@@ -6,12 +6,12 @@ import {
   Quote, Heading1, Heading2 
 } from "lucide-react";
 
-type NoteEditorProps = {
+interface NoteEditorProps {
   value: string;
   onChange: (value: string) => void;
-};
+}
 
-export default function NoteEditor({ value, onChange }: NoteEditorProps) {
+export function NoteEditor({ value, onChange }: NoteEditorProps) {
   const editor = useEditor({
     extensions: [StarterKit],
     content: value,
