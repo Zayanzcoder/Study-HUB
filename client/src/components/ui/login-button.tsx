@@ -3,22 +3,15 @@ import { Button } from "./button";
 
 export function LoginButton() {
   const handleLogin = () => {
-    window.addEventListener('message', (e) => {
-      if (e.data.type === 'userAuthed') {
-        window.location.reload();
-      }
-    });
-    
-    const authWindow = window.open(
-      'https://replit.com/auth_with_repl_site?domain=' + window.location.host,
-      '_blank',
-      'width=500,height=600'
-    );
+    // This will trigger the Replit Auth popup
+    const loginButton = document.createElement('div');
+    loginButton.innerHTML = '<div class="auth-button-container"><script src="https://auth.util.repl.co/script.js"></script></div>';
+    document.body.appendChild(loginButton);
   };
 
   return (
     <Button onClick={handleLogin} variant="outline">
-      Sign in with Replit
+      Login with Replit
     </Button>
   );
 }

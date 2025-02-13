@@ -81,14 +81,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Auth middleware
-app.use((req, res, next) => {
-  const user = getUserFromRequest(req);
-  req.user = user;
-  next();
-});
-
-app.post("/api/ai/chat", async (req, res) => {
+  app.post("/api/ai/chat", async (req, res) => {
     try {
       const { prompt } = z.object({ prompt: z.string() }).parse(req.body);
       const response = await getAIResponse(prompt);
