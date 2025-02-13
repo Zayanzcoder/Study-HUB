@@ -11,11 +11,23 @@ import AIChat from "@/pages/ai-chat";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    fetch('/auth/status')
+      .then(res => res.json())
+      .then(data => setIsAuthenticated(data.authenticated))
+      .catch(console.error);
+  }, []);
+
+  if (!isAuthenticated) {
+    return <Home />;
+  }
+
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/" component={Dashboard} />
         <Route path="/tasks" component={Tasks} />
         <Route path="/notes" component={Notes} />
         <Route path="/ai-chat" component={AIChat} />
