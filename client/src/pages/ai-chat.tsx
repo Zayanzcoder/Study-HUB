@@ -24,11 +24,17 @@ export default function AIChat() {
       const res = await apiRequest("POST", "/api/ai/chat", { prompt });
       return res.json();
     },
-    onSuccess: (data) => {
+    onMutate: () => {
       setMessages((prev) => [
         ...prev,
-        { id: prev.length + 2, content: data.response, isUser: false },
+        { id: prev.length + 2, content: "typing", isUser: false, isTyping: true },
       ]);
+    },
+    onSuccess: (data) => {
+      setMessages((prev) => {
+        const filtered = prev.filter(msg => !msg.isTyping);
+        return [...filtered, { id: prev.length + 2, content: data.response, isUser: false }];
+      });
     },
     onError: (error) => {
       setMessages((prev) => [
