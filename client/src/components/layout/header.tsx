@@ -12,7 +12,11 @@ import { useState, useEffect } from 'react';
 import { LoginButton } from "../ui/login-button";
 import { useLocation } from "wouter";
 
-export function Header() {
+interface HeaderProps {
+  onLogout: () => void;
+}
+
+export function Header({ onLogout }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [, setLocation] = useLocation();
   const isGuest = localStorage.getItem('isGuest') === 'true';
@@ -33,13 +37,8 @@ export function Header() {
   }, []);
 
   const handleLogout = () => {
-    if (isGuest) {
-      localStorage.removeItem('isGuest');
-    } else {
-      // Handle Replit auth logout
-      fetch('/auth/logout', { method: 'POST' })
-        .catch(console.error);
-    }
+    onLogout();
+    localStorage.removeItem('isGuest'); // Clear guest status on logout
     setLocation('/');
   };
 
@@ -47,9 +46,7 @@ export function Header() {
     <header className="border-b">
       <div className="flex h-16 items-center px-4">
         <Link href="/">
-          <Button variant="ghost" className="text-2xl font-bold text-primary px-0">
-            StudyHub
-          </Button>
+          <a className="text-2xl font-bold text-primary">StudyHub</a>
         </Link>
         <div className="ml-auto flex items-center space-x-4">
           {user ? (
