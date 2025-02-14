@@ -1,20 +1,16 @@
 import OpenAI from "openai";
-import FormData from "form-data";
 import fs from 'fs';
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ baseURL: "https://api.x.ai/v1", apiKey: process.env.XAI_API_KEY });
 
 export async function getAIResponse(prompt: string): Promise<string> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "grok-2-1212",
       messages: [
         { role: "system", content: "You are a helpful AI assistant for a student productivity platform." },
         { role: "user", content: prompt }
       ],
-      temperature: 0.7,
-      max_tokens: 500
     });
 
     return response.choices[0].message.content || "I'm not sure how to help with that.";
@@ -35,7 +31,7 @@ export async function generateNoteContent(topic: string, context?: string): Prom
     Focus on key concepts, definitions, and examples. Format the content using markdown for better readability.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "grok-2-1212",
       messages: [
         { 
           role: "system", 
@@ -43,8 +39,6 @@ export async function generateNoteContent(topic: string, context?: string): Prom
         },
         { role: "user", content: prompt }
       ],
-      temperature: 0.7,
-      max_tokens: 1000
     });
 
     return response.choices[0].message.content || "Failed to generate notes.";
@@ -67,13 +61,30 @@ export async function transcribeAudio(audioBase64: string): Promise<string> {
     fs.writeFileSync(tempFilePath, audioBuffer);
 
     try {
-      const transcription = await openai.audio.transcriptions.create({
-        file: fs.createReadStream(tempFilePath),
-        model: "whisper-1",
-        language: "en"
+      // Using Grok's vision model for audio transcription
+      const transcription = await openai.chat.completions.create({
+        model: "grok-2-vision-1212",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Please transcribe this audio file accurately."
+              },
+              {
+                type: "audio_url",
+                audio_url: {
+                  url: `data:audio/webm;base64,${audioBase64}`
+                }
+              }
+            ],
+          },
+        ],
+        max_tokens: 1000,
       });
 
-      return transcription.text;
+      return transcription.choices[0].message.content;
     } finally {
       // Clean up temporary file
       fs.unlinkSync(tempFilePath);
