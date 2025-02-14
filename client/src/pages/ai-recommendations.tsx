@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,29 @@ export default function AIRecommendations() {
   const { toast } = useToast();
   const [subjects, setSubjects] = useState<string[]>([]);
   const [newSubject, setNewSubject] = useState("");
+  const [learningStyle, setLearningStyle] = useState<string>("visual");
+  const [studyGoals, setStudyGoals] = useState<string>("");
+  const [difficultyLevel, setDifficultyLevel] = useState<string>("intermediate");
 
   // Fetch user's study preferences
   const { data: preferences, isLoading: preferencesLoading } = useQuery<StudyPreferences>({
     queryKey: ["/api/study-preferences"],
   });
 
+  // Initialize state from preferences
+  useEffect(() => {
+    if (preferences) {
+      setSubjects(preferences.subjects || []);
+      setLearningStyle(preferences.learningStyle || "visual");
+      setStudyGoals(preferences.studyGoals || "");
+      setDifficultyLevel(preferences.difficultyLevel || "intermediate");
+    }
+  }, [preferences]);
+
   // Fetch recommendations
   const { data: recommendations, isLoading: recommendationsLoading } = useQuery<StudyRecommendation[]>({
     queryKey: ["/api/recommendations"],
-    enabled: !!preferences, // Only fetch if we have preferences
+    enabled: !!preferences,
   });
 
   // Save preferences mutation
@@ -58,21 +71,25 @@ export default function AIRecommendations() {
 
   const addSubject = () => {
     if (newSubject && !subjects.includes(newSubject)) {
-      setSubjects([...subjects, newSubject]);
+      const updatedSubjects = [...subjects, newSubject];
+      setSubjects(updatedSubjects);
       setNewSubject("");
+      savePreferencesMutation.mutate({ subjects: updatedSubjects });
     }
   };
 
   const removeSubject = (subject: string) => {
-    setSubjects(subjects.filter(s => s !== subject));
+    const updatedSubjects = subjects.filter(s => s !== subject);
+    setSubjects(updatedSubjects);
+    savePreferencesMutation.mutate({ subjects: updatedSubjects });
   };
 
   const handleSavePreferences = async () => {
     await savePreferencesMutation.mutateAsync({
       subjects,
-      learningStyle: preferences?.learningStyle || "visual",
-      studyGoals: preferences?.studyGoals || "",
-      difficultyLevel: preferences?.difficultyLevel || "intermediate"
+      learningStyle,
+      studyGoals,
+      difficultyLevel
     });
   };
 
@@ -142,10 +159,11 @@ export default function AIRecommendations() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Learning Style</label>
               <Select
-                value={preferences?.learningStyle}
-                onValueChange={(value) => 
-                  savePreferencesMutation.mutate({ ...preferences, learningStyle: value })
-                }
+                value={learningStyle}
+                onValueChange={(value) => {
+                  setLearningStyle(value);
+                  savePreferencesMutation.mutate({ learningStyle: value });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your learning style" />
@@ -164,10 +182,11 @@ export default function AIRecommendations() {
               <label className="text-sm font-medium">Study Goals</label>
               <Textarea
                 placeholder="What are your study goals?"
-                value={preferences?.studyGoals}
-                onChange={(e) => 
-                  savePreferencesMutation.mutate({ ...preferences, studyGoals: e.target.value })
-                }
+                value={studyGoals}
+                onChange={(e) => {
+                  setStudyGoals(e.target.value);
+                  savePreferencesMutation.mutate({ studyGoals: e.target.value });
+                }}
               />
             </div>
 
@@ -175,10 +194,11 @@ export default function AIRecommendations() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Preferred Difficulty Level</label>
               <Select
-                value={preferences?.difficultyLevel}
-                onValueChange={(value) => 
-                  savePreferencesMutation.mutate({ ...preferences, difficultyLevel: value })
-                }
+                value={difficultyLevel}
+                onValueChange={(value) => {
+                  setDifficultyLevel(value);
+                  savePreferencesMutation.mutate({ difficultyLevel: value });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select difficulty level" />

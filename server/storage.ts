@@ -1,5 +1,5 @@
 import { IStorage } from "./types";
-import { User, Task, Note, InsertUser, InsertTask, InsertNote } from "@shared/schema";
+import { User, Task, Note, InsertUser, InsertTask, InsertNote, studyPreferences, studyRecommendations, StudyPreferences, StudyRecommendation, InsertStudyPreferences, InsertStudyRecommendation } from "@shared/schema";
 import { users, tasks, notes } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -67,6 +67,51 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNote(id: number): Promise<void> {
     await db.delete(notes).where(eq(notes.id, id));
+  }
+
+  // New methods for study preferences
+  async getStudyPreferences(userId: number): Promise<StudyPreferences | undefined> {
+    const [prefs] = await db
+      .select()
+      .from(studyPreferences)
+      .where(eq(studyPreferences.userId, userId));
+    return prefs;
+  }
+
+  async createOrUpdateStudyPreferences(userId: number, prefs: Partial<InsertStudyPreferences>): Promise<StudyPreferences> {
+    const existingPrefs = await this.getStudyPreferences(userId);
+
+    if (existingPrefs) {
+      const [updated] = await db
+        .update(studyPreferences)
+        .set({ ...prefs, updatedAt: new Date() })
+        .where(eq(studyPreferences.id, existingPrefs.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(studyPreferences)
+        .values({ ...prefs, userId })
+        .returning();
+      return created;
+    }
+  }
+
+  // Methods for study recommendations
+  async createRecommendation(userId: number, rec: Omit<InsertStudyRecommendation, "userId">): Promise<StudyRecommendation> {
+    const [recommendation] = await db
+      .insert(studyRecommendations)
+      .values({ ...rec, userId })
+      .returning();
+    return recommendation;
+  }
+
+  async getUserRecommendations(userId: number): Promise<StudyRecommendation[]> {
+    return await db
+      .select()
+      .from(studyRecommendations)
+      .where(eq(studyRecommendations.userId, userId))
+      .orderBy(studyRecommendations.createdAt);
   }
 }
 

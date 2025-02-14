@@ -4,19 +4,27 @@ import passport from 'passport';
 import session from 'express-session';
 import { storage } from "./storage";
 import { getAIResponse } from "./ai";
-import { insertTaskSchema, insertNoteSchema } from "@shared/schema";
+import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
 import { z } from "zod";
 
+declare global {
+  namespace Express {
+    interface User extends User {}
+  }
+}
+
 export function registerRoutes(app: Express) {
+  // Keep existing middleware and auth routes
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false
   }));
-  
+
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Keep existing auth routes
   app.get('/auth/google',
     passport.authenticate('google', { 
       scope: ['profile', 'email'],
@@ -42,13 +50,7 @@ export function registerRoutes(app: Express) {
     });
   });
 
-  app.get('/auth/logout', (req, res) => {
-    req.logout(() => {
-      res.redirect('/');
-    });
-  });
-
-  app.get('/auth/logout', (req, res) => {
+  app.post('/auth/logout', (req, res) => {
     req.logout(() => {
       res.redirect('/');
     });
@@ -57,6 +59,8 @@ export function registerRoutes(app: Express) {
   app.get('/api/user', (req, res) => {
     res.json(req.user || null);
   });
+
+  // Keep existing task and note routes
   app.post("/api/tasks", async (req, res) => {
     try {
       const task = insertTaskSchema.parse(req.body);
@@ -132,6 +136,72 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Add new routes for study preferences and recommendations
+  app.get('/api/study-preferences', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const preferences = await storage.getStudyPreferences(req.user.id);
+      res.json(preferences || null);
+    } catch (error) {
+      console.error('Error fetching study preferences:', error);
+      res.status(500).json({ error: 'Failed to fetch study preferences' });
+    }
+  });
+
+  app.post('/api/study-preferences', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const preferences = await storage.createOrUpdateStudyPreferences(req.user.id, req.body);
+      res.json(preferences);
+    } catch (error) {
+      console.error('Error saving study preferences:', error);
+      res.status(500).json({ error: 'Failed to save study preferences' });
+    }
+  });
+
+  app.get('/api/recommendations', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const recommendations = await storage.getUserRecommendations(req.user.id);
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      res.status(500).json({ error: 'Failed to fetch recommendations' });
+    }
+  });
+
+  app.post('/api/recommendations/generate', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const preferences = await storage.getStudyPreferences(req.user.id);
+      if (!preferences) {
+        return res.status(400).json({ error: 'Study preferences not set' });
+      }
+
+      // Create a sample recommendation (replace with actual AI generation later)
+      const recommendation = await storage.createRecommendation(req.user.id, {
+        subject: preferences.subjects?.[0] || 'General',
+        recommendation: 'Based on your learning style and goals, we recommend focusing on interactive learning methods.',
+        resources: 'Khan Academy, Coursera, and practice exercises',
+        status: 'active'
+      });
+
+      res.json(recommendation);
+    } catch (error) {
+      console.error('Error generating recommendation:', error);
+      res.status(500).json({ error: 'Failed to generate recommendation' });
+    }
+  });
+
+  // Keep existing AIChat routes
   app.post("/api/ai/chat", async (req, res) => {
     try {
       const { prompt } = z.object({ prompt: z.string() }).parse(req.body);
