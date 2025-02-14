@@ -67,10 +67,12 @@ export default function Home() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <h3 className="text-2xl font-semibold mb-4">Meet Our Founder</h3>
-                <div className="flex items-start gap-4">
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <User className="h-6 w-6" />
-                  </div>
+                <div className="flex items-start gap-6">
+                  <img 
+                    src="/attached_assets/1739543476017.jpg"
+                    alt="Founder"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white/20"
+                  />
                   <div className="space-y-2">
                     <p className="text-gray-300">
                       I am a high school student currently studying in 11th grade under the CBSE curriculum in Saudi Arabia. 

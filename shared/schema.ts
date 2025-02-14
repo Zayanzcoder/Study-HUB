@@ -1,10 +1,10 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, bigint, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Keep existing tables
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: bigint("id", { mode: "number" }).primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
@@ -14,7 +14,7 @@ export const users = pgTable("users", {
 
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: bigint("user_id", { mode: "number" }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   dueDate: timestamp("due_date"),
@@ -24,17 +24,17 @@ export const tasks = pgTable("tasks", {
 
 export const notes = pgTable("notes", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: bigint("user_id", { mode: "number" }).notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
   isPublic: boolean("is_public").notNull().default(false),
   sharedWith: text("shared_with").array(),
 });
 
-// Add new table for study preferences
+// Update study preferences table
 export const studyPreferences = pgTable("study_preferences", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: bigint("user_id", { mode: "number" }).notNull(),
   subjects: text("subjects").array(),
   learningStyle: text("learning_style"),
   studyGoals: text("study_goals"),
@@ -42,10 +42,10 @@ export const studyPreferences = pgTable("study_preferences", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Add new table for AI recommendations
+// Update study recommendations table
 export const studyRecommendations = pgTable("study_recommendations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: bigint("user_id", { mode: "number" }).notNull(),
   subject: text("subject").notNull(),
   recommendation: text("recommendation").notNull(),
   resources: text("resources"),
