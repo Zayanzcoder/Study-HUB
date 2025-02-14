@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import FormData from "form-data";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -48,17 +49,27 @@ export async function generateNoteContent(topic: string, context?: string): Prom
     return response.choices[0].message.content || "Failed to generate notes.";
   } catch (error: any) {
     console.error("Note generation error:", error);
+    if (error.status === 429) {
+      throw new Error("AI service quota exceeded. Please try again later.");
+    }
     throw new Error("Failed to generate notes: " + error.message);
   }
 }
 
 export async function transcribeAudio(audioBase64: string): Promise<string> {
   try {
-    // Convert base64 to buffer
+    // Convert base64 to buffer and create file
     const audioBuffer = Buffer.from(audioBase64, 'base64');
+    const formData = new FormData();
+
+    // Create a blob with proper MIME type
+    const blob = new Blob([audioBuffer], { type: 'audio/webm' });
+    formData.append('file', blob, 'audio.webm');
+    formData.append('model', 'whisper-1');
+    formData.append('language', 'en');
 
     const transcription = await openai.audio.transcriptions.create({
-      file: audioBuffer,
+      file: blob,
       model: "whisper-1",
       language: "en"
     });
@@ -66,6 +77,9 @@ export async function transcribeAudio(audioBase64: string): Promise<string> {
     return transcription.text;
   } catch (error: any) {
     console.error("Transcription error:", error);
+    if (error.status === 429) {
+      throw new Error("AI service quota exceeded. Please try again later.");
+    }
     throw new Error("Failed to transcribe audio: " + error.message);
   }
 }
