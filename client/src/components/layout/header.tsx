@@ -56,6 +56,7 @@ export function Header({ onLogout }: HeaderProps) {
       if (response.ok) {
         setUser(null);
         onLogout();
+        // Only redirect after successful logout
         setLocation('/');
         toast({
           title: "Logged out successfully",
@@ -79,11 +80,11 @@ export function Header({ onLogout }: HeaderProps) {
   return (
     <header className="border-b">
       <div className="flex h-16 items-center px-4">
-        <Link href="/">
-          <Button variant="ghost" className="text-2xl font-bold text-primary p-0">
+        <Button variant="ghost" className="text-2xl font-bold text-primary p-0">
+          <Link href="/">
             StudyHub
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         <div className="ml-auto flex items-center space-x-4">
           {user ? (
             <DropdownMenu>
