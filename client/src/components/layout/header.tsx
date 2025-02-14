@@ -1,5 +1,5 @@
-import { Link } from "wouter";
-import { Button } from "../ui/button";
+import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,12 +7,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@shared/schema";
 import { useState, useEffect } from 'react';
-import { LoginButton } from "../ui/login-button";
-import { useLocation } from "wouter";
+import { LoginButton } from "@/components/ui/login-button";
 import { Settings, User as UserIcon, Key, LogOut } from "lucide-react";
 
 interface HeaderProps {
@@ -26,7 +25,7 @@ export function Header({ onLogout }: HeaderProps) {
   useEffect(() => {
     async function getUser() {
       try {
-        const response = await fetch('/__replauthuser');
+        const response = await fetch('/api/user');
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
@@ -47,7 +46,9 @@ export function Header({ onLogout }: HeaderProps) {
     <header className="border-b">
       <div className="flex h-16 items-center px-4">
         <Link href="/">
-          <a className="text-2xl font-bold text-primary">StudyHub</a>
+          <Button variant="ghost" className="text-2xl font-bold text-primary p-0">
+            StudyHub
+          </Button>
         </Link>
         <div className="ml-auto flex items-center space-x-4">
           {user ? (
@@ -60,13 +61,19 @@ export function Header({ onLogout }: HeaderProps) {
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.avatar || undefined} alt={user.name} />
                     <AvatarFallback>
-                      {user.name.charAt(0).toUpperCase()}
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setLocation('/profile')}>
                   <UserIcon className="mr-2 h-4 w-4" />
                   Profile
@@ -82,7 +89,7 @@ export function Header({ onLogout }: HeaderProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
