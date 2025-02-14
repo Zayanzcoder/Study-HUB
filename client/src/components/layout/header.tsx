@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@shared/schema";
 import { useState, useEffect } from 'react';
 import { LoginButton } from "@/components/ui/login-button";
-import { Settings, User as UserIcon, Key, LogOut } from "lucide-react";
+import { Settings, User as UserIcon, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
@@ -41,7 +41,9 @@ export function Header({ onLogout }: HeaderProps) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/auth/logout');
+      const response = await fetch('/auth/logout', {
+        method: 'POST'
+      });
       if (response.ok) {
         onLogout();
         setLocation('/');
@@ -99,10 +101,6 @@ export function Header({ onLogout }: HeaderProps) {
                 <DropdownMenuItem onClick={() => setLocation('/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation('/security')}>
-                  <Key className="mr-2 h-4 w-4" />
-                  Security & Password
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>

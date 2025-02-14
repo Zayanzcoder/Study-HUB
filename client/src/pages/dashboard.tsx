@@ -3,28 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Task } from "@shared/schema";
 import { TaskCard } from "@/components/tasks/task-card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ListTodo, CheckCircle2, Clock, AlertCircle, LogOut } from "lucide-react";
+import { ListTodo, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 
 export default function Dashboard() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const isGuest = !localStorage.getItem('user');
-  const userInfo = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
 
   const { data: tasks, isLoading } = useQuery<Task[]>({
     queryKey: ["/api/tasks/1"],
-    enabled: !isGuest,
   });
 
   const currentTasks = tasks || [];
@@ -53,78 +40,22 @@ export default function Dashboard() {
     completed: Math.floor(Math.random() * 5) + 1, // Replace with actual data
   }));
 
-  const handleExitGuestMode = () => {
-    window.location.replace('/');
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.location.replace('/');
-  };
-
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">
-          {isGuest ? "Welcome Guest!" : "Welcome back!"}
-        </h1>
-        <div className="flex items-center gap-4">
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priorities</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {!isGuest && userInfo && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={userInfo.picture} alt={userInfo.name} />
-                    <AvatarFallback>{userInfo.name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{userInfo.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {userInfo.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = '/settings'}>
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+        <h1 className="text-3xl font-bold">Welcome back!</h1>
+        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Priorities</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-
-      {isGuest && (
-        <div className="flex justify-center mb-4">
-          <Button onClick={handleExitGuestMode} variant="outline" className="w-full max-w-sm">
-            <LogOut className="h-4 w-4 mr-2" />
-            Exit Guest Mode
-          </Button>
-        </div>
-      )}
 
       {isLoading ? (
         <div className="text-center py-4">Loading...</div>
