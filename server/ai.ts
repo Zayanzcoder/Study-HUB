@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import FormData from "form-data";
+import fs from 'fs';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -58,23 +59,25 @@ export async function generateNoteContent(topic: string, context?: string): Prom
 
 export async function transcribeAudio(audioBase64: string): Promise<string> {
   try {
-    // Convert base64 to buffer and create file
+    // Convert base64 to buffer
     const audioBuffer = Buffer.from(audioBase64, 'base64');
-    const formData = new FormData();
 
-    // Create a blob with proper MIME type
-    const blob = new Blob([audioBuffer], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
-    formData.append('model', 'whisper-1');
-    formData.append('language', 'en');
+    // Create a temporary file
+    const tempFilePath = `/tmp/audio-${Date.now()}.webm`;
+    fs.writeFileSync(tempFilePath, audioBuffer);
 
-    const transcription = await openai.audio.transcriptions.create({
-      file: blob,
-      model: "whisper-1",
-      language: "en"
-    });
+    try {
+      const transcription = await openai.audio.transcriptions.create({
+        file: fs.createReadStream(tempFilePath),
+        model: "whisper-1",
+        language: "en"
+      });
 
-    return transcription.text;
+      return transcription.text;
+    } finally {
+      // Clean up temporary file
+      fs.unlinkSync(tempFilePath);
+    }
   } catch (error: any) {
     console.error("Transcription error:", error);
     if (error.status === 429) {

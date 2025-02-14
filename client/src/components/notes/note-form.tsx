@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NoteEditor } from "./note-editor";
-import { Wand2 } from "lucide-react";
+import { Wand2, Loader2 } from "lucide-react";
 import { VoiceRecorder } from "./voice-recorder";
 
 interface NoteFormProps {
@@ -27,6 +28,7 @@ interface NoteFormProps {
 
 export function NoteForm({ open, onOpenChange }: NoteFormProps) {
   const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertNoteSchema),
@@ -68,6 +70,48 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
       });
     },
   });
+
+  const handleGenerateContent = async () => {
+    const topic = form.getValues("topic");
+    if (!topic) {
+      toast({
+        title: "Topic required",
+        description: "Please enter a topic for AI to generate notes about",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch("/api/notes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to generate notes");
+      }
+
+      const { content } = await response.json();
+      form.setValue("content", content);
+      toast({
+        title: "Notes generated",
+        description: "AI has generated notes based on your topic.",
+      });
+    } catch (error: any) {
+      console.error('Generation error:', error);
+      toast({
+        title: "Generation failed",
+        description: error.message || "Failed to generate notes. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   function onSubmit(values: any) {
     if (!values.content.trim()) {
@@ -120,42 +164,15 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 type="button"
                 variant="outline"
                 className="mt-8"
-                onClick={async () => {
-                  const topic = form.getValues("topic");
-                  if (!topic) {
-                    toast({
-                      title: "Topic required",
-                      description: "Please enter a topic for AI to generate notes about",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-
-                  try {
-                    const response = await fetch("/api/notes/generate", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ topic }),
-                    });
-
-                    if (!response.ok) {
-                      throw new Error("Failed to generate notes");
-                    }
-
-                    const { content } = await response.json();
-                    form.setValue("content", content);
-                  } catch (error) {
-                    toast({
-                      title: "Generation failed",
-                      description: "Failed to generate notes. Please try again.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                disabled={createNote.isPending}
+                onClick={handleGenerateContent}
+                disabled={isGenerating || createNote.isPending}
               >
-                <Wand2 className="h-4 w-4 mr-2" />
-                Generate
+                {isGenerating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4 mr-2" />
+                )}
+                {isGenerating ? "Generating..." : "Generate"}
               </Button>
             </div>
 
