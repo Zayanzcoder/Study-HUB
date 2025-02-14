@@ -4,6 +4,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -11,6 +13,7 @@ import { User } from "@shared/schema";
 import { useState, useEffect } from 'react';
 import { LoginButton } from "../ui/login-button";
 import { useLocation } from "wouter";
+import { Settings, User as UserIcon, Key, LogOut } from "lucide-react";
 
 interface HeaderProps {
   onLogout: () => void;
@@ -19,7 +22,6 @@ interface HeaderProps {
 export function Header({ onLogout }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [, setLocation] = useLocation();
-  const isGuest = localStorage.getItem('isGuest') === 'true';
 
   useEffect(() => {
     async function getUser() {
@@ -38,7 +40,6 @@ export function Header({ onLogout }: HeaderProps) {
 
   const handleLogout = () => {
     onLogout();
-    localStorage.removeItem('isGuest'); // Clear guest status on logout
     setLocation('/');
   };
 
@@ -64,16 +65,27 @@ export function Header({ onLogout }: HeaderProps) {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setLocation('/profile')}>
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation('/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation('/security')}>
+                  <Key className="mr-2 h-4 w-4" />
+                  Security & Password
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : isGuest ? (
-            <Button onClick={handleLogout} variant="ghost">
-              Exit Guest Mode
-            </Button>
           ) : (
             <LoginButton />
           )}
