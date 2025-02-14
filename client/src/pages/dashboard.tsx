@@ -6,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ListTodo, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { format, startOfDay, isWithinInterval, subDays } from "date-fns";
 
 export default function Dashboard() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -28,17 +29,22 @@ export default function Dashboard() {
   const pendingTasks = currentTasks.filter(task => task.status === "pending").length;
   const totalTasks = currentTasks.length;
 
-  // Generate last 7 days data
+  // Generate last 7 days data with actual completion counts
   const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return date;
-  }).reverse();
+    const date = startOfDay(subDays(new Date(), i));
+    const nextDay = startOfDay(subDays(new Date(), i - 1));
 
-  const chartData = last7Days.map(date => ({
-    name: date.toLocaleDateString('en-US', { weekday: 'short' }),
-    completed: Math.floor(Math.random() * 5) + 1, // Replace with actual data
-  }));
+    const completedOnDay = currentTasks.filter(task => {
+      const taskDate = task.status === "completed" && task.updatedAt ? 
+        startOfDay(new Date(task.updatedAt)) : null;
+      return taskDate && isWithinInterval(taskDate, { start: date, end: nextDay });
+    }).length;
+
+    return {
+      name: format(date, 'EEE'),
+      completed: completedOnDay,
+    };
+  }).reverse();
 
   return (
     <div className="space-y-6 p-6">
@@ -112,7 +118,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
+                  <LineChart data={last7Days}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
