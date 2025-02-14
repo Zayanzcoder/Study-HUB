@@ -41,9 +41,12 @@ export function Header({ onLogout }: HeaderProps) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/auth/google/logout', {
+      const response = await fetch('/auth/logout', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {
