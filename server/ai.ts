@@ -1,19 +1,17 @@
-import { HfInference } from '@huggingface/inference';
-
-const hf = new HfInference();
+import { PythonShell } from 'python-shell';
+import fs from 'fs';
 
 export async function getAIResponse(prompt: string): Promise<string> {
   try {
-    const response = await hf.textGeneration({
-      model: 'facebook/bart-large-cnn',
-      inputs: prompt,
-      parameters: {
-        max_length: 500,
-        temperature: 0.7,
-      }
-    });
+    let options = {
+      mode: 'text' as const,
+      pythonPath: 'python3',
+      scriptPath: './server',
+      args: [prompt]
+    };
 
-    return response.generated_text || "I'm not sure how to help with that.";
+    const messages = await PythonShell.run('ai.py', options);
+    return messages[messages.length - 1] || "I'm not sure how to help with that.";
   } catch (error: any) {
     console.error("AI API error:", error);
     return "Sorry, I'm having trouble processing your request right now.";
@@ -22,19 +20,19 @@ export async function getAIResponse(prompt: string): Promise<string> {
 
 export async function generateNoteContent(topic: string, context?: string): Promise<string> {
   try {
-    const prompt = `Generate comprehensive study notes about "${topic}"${context ? ` with this additional context: ${context}` : ''}.
-    Focus on key concepts, definitions, and examples. Format the content using markdown for better readability.`;
+    const options = {
+      mode: 'text' as const,
+      pythonPath: 'python3',
+      scriptPath: './server',
+      args: ['generate', topic]
+    };
 
-    const response = await hf.textGeneration({
-      model: 'facebook/bart-large-cnn',
-      inputs: prompt,
-      parameters: {
-        max_length: 1000,
-        temperature: 0.7,
-      }
-    });
+    if (context) {
+      options.args.push(context);
+    }
 
-    return response.generated_text || "Failed to generate notes.";
+    const messages = await PythonShell.run('ai.py', options);
+    return messages[messages.length - 1] || "Failed to generate notes.";
   } catch (error: any) {
     console.error("Note generation error:", error);
     throw new Error("Failed to generate notes: " + error.message);
@@ -43,12 +41,15 @@ export async function generateNoteContent(topic: string, context?: string): Prom
 
 export async function transcribeAudio(audioBase64: string): Promise<string> {
   try {
-    const response = await hf.automaticSpeechRecognition({
-      model: 'openai/whisper-small',
-      data: Buffer.from(audioBase64, 'base64'),
-    });
+    const options = {
+      mode: 'text' as const,
+      pythonPath: 'python3',
+      scriptPath: './server',
+      args: ['transcribe', audioBase64]
+    };
 
-    return response.text;
+    const messages = await PythonShell.run('ai.py', options);
+    return messages[messages.length - 1] || "";
   } catch (error: any) {
     console.error("Transcription error:", error);
     throw new Error("Failed to transcribe audio: " + error.message);

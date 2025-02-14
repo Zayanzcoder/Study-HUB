@@ -3,9 +3,10 @@ import { createServer } from "http";
 import passport from 'passport';
 import session from 'express-session';
 import { storage } from "./storage";
-import { getAIResponse, generateNoteContent, transcribeAudio } from "./ai";
+import { getAIResponse } from "./ai";
 import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
 import { z } from "zod";
+import { PythonShell } from 'python-shell';
 
 declare global {
   namespace Express {
@@ -14,7 +15,6 @@ declare global {
 }
 
 export function registerRoutes(app: Express) {
-  // Keep existing middleware and auth routes
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
@@ -24,7 +24,6 @@ export function registerRoutes(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Keep existing auth routes
   app.get('/auth/google',
     passport.authenticate('google', { 
       scope: ['profile', 'email'],
@@ -60,7 +59,6 @@ export function registerRoutes(app: Express) {
     res.json(req.user || null);
   });
 
-  // Keep existing task and note routes
   app.post("/api/tasks", async (req, res) => {
     try {
       const task = insertTaskSchema.parse(req.body);
@@ -136,7 +134,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // AI note generation endpoint
   app.post("/api/notes/generate", async (req, res) => {
     try {
       const { topic, context } = z.object({
@@ -144,8 +141,28 @@ export function registerRoutes(app: Express) {
         context: z.string().optional()
       }).parse(req.body);
 
-      const content = await generateNoteContent(topic, context);
-      res.json({ content });
+      let options = {
+        mode: 'text' as const,
+        pythonPath: 'python3',
+        scriptPath: './server',
+        args: ['generate', topic]
+      };
+
+      if (context) {
+        options.args.push(context);
+      }
+
+      try {
+        const messages = await PythonShell.run('ai.py', options);
+        const content = messages[messages.length - 1];
+        res.json({ content });
+      } catch (error: any) {
+        console.error("Note generation error:", error);
+        res.status(400).json({ 
+          error: "Failed to generate note",
+          message: error.message 
+        });
+      }
     } catch (error: any) {
       console.error("Note generation error:", error);
       res.status(400).json({ 
@@ -155,15 +172,30 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Voice transcription endpoint
   app.post("/api/notes/transcribe", async (req, res) => {
     try {
       const { audioData } = z.object({
         audioData: z.string()
       }).parse(req.body);
 
-      const transcription = await transcribeAudio(audioData);
-      res.json({ text: transcription });
+      let options = {
+        mode: 'text' as const,
+        pythonPath: 'python3',
+        scriptPath: './server',
+        args: ['transcribe', audioData]
+      };
+
+      try {
+        const messages = await PythonShell.run('ai.py', options);
+        const text = messages[messages.length - 1];
+        res.json({ text });
+      } catch (error: any) {
+        console.error("Transcription error:", error);
+        res.status(400).json({ 
+          error: "Failed to transcribe audio",
+          message: error.message 
+        });
+      }
     } catch (error: any) {
       console.error("Transcription error:", error);
       res.status(400).json({ 
@@ -173,7 +205,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Add new routes for study preferences and recommendations
   app.get('/api/study-preferences', async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -223,7 +254,6 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: 'Study preferences not set' });
       }
 
-      // Create a sample recommendation (replace with actual AI generation later)
       const recommendation = await storage.createRecommendation(req.user.id, {
         subject: preferences.subjects?.[0] || 'General',
         recommendation: 'Based on your learning style and goals, we recommend focusing on interactive learning methods.',
@@ -238,7 +268,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Keep existing AIChat routes
   app.post("/api/ai/chat", async (req, res) => {
     try {
       const { prompt } = z.object({ prompt: z.string() }).parse(req.body);
