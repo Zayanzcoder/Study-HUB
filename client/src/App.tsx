@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Switch, Route, useLocation, useNavigate } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,13 +12,13 @@ import AIChat from "@/pages/ai-chat";
 import NotFound from "@/pages/not-found";
 
 function PrivateRoute({ component: Component, isAuthenticated, ...rest }: any) {
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/');
+      setLocation('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, setLocation]);
 
   return isAuthenticated ? <Component {...rest} /> : null;
 }
@@ -26,7 +26,7 @@ function PrivateRoute({ component: Component, isAuthenticated, ...rest }: any) {
 function Router() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     fetch('/auth/status')
@@ -34,7 +34,7 @@ function Router() {
       .then(data => {
         setIsAuthenticated(data.authenticated);
         if (data.authenticated) {
-          navigate('/dashboard');
+          setLocation('/dashboard');
         }
         setLoading(false);
       })
@@ -42,16 +42,32 @@ function Router() {
         console.error('Auth check failed:', error);
         setLoading(false);
       });
-  }, [navigate]);
+  }, [setLocation]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
+  // Show home page if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <Shell>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route component={NotFound} />
+        </Switch>
+      </Shell>
+    );
+  }
+
+  // Show authenticated routes
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={() => {
+          setLocation('/dashboard');
+          return null;
+        }} />
         <Route 
           path="/dashboard" 
           component={(props) => (
