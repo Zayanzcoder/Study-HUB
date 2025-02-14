@@ -23,6 +23,22 @@ function PrivateRoute({ component: Component, isAuthenticated, ...rest }: any) {
   return isAuthenticated ? <Component {...rest} /> : null;
 }
 
+function PublicShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen">
+      {children}
+    </div>
+  );
+}
+
+function AuthenticatedShell({ children }: { children: React.ReactNode }) {
+  return (
+    <Shell>
+      {children}
+    </Shell>
+  );
+}
+
 function Router() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -48,21 +64,21 @@ function Router() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Show home page if not authenticated
+  // Public routes with different layout
   if (!isAuthenticated) {
     return (
-      <Shell>
+      <PublicShell>
         <Switch>
           <Route path="/" component={Home} />
           <Route component={NotFound} />
         </Switch>
-      </Shell>
+      </PublicShell>
     );
   }
 
-  // Show authenticated routes
+  // Authenticated routes with dashboard layout
   return (
-    <Shell>
+    <AuthenticatedShell>
       <Switch>
         <Route path="/" component={() => {
           setLocation('/dashboard');
@@ -110,7 +126,7 @@ function Router() {
         />
         <Route component={NotFound} />
       </Switch>
-    </Shell>
+    </AuthenticatedShell>
   );
 }
 
