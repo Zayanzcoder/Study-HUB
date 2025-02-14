@@ -6,13 +6,14 @@ import {
   CheckSquare,
   FileText,
   MessageSquare,
+  Brain,
 } from "lucide-react";
 
 const routes = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
-    href: "/",
+    href: "/dashboard",
   },
   {
     title: "Tasks",
@@ -28,6 +29,11 @@ const routes = [
     title: "AI Chat",
     icon: MessageSquare,
     href: "/ai-chat",
+  },
+  {
+    title: "Study AI",
+    icon: Brain,
+    href: "/ai-recommendations",
   },
 ];
 

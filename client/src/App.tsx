@@ -11,6 +11,7 @@ import Notes from "@/pages/notes";
 import AIChat from "@/pages/ai-chat";
 import NotFound from "@/pages/not-found";
 import Profile from "@/pages/profile";
+import AIRecommendations from "@/pages/ai-recommendations";
 
 function PrivateRoute({ component: Component, isAuthenticated, ...rest }: any) {
   const [, setLocation] = useLocation();
@@ -65,7 +66,6 @@ function Router() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Public routes with different layout
   if (!isAuthenticated) {
     return (
       <PublicShell>
@@ -77,7 +77,6 @@ function Router() {
     );
   }
 
-  // Authenticated routes with dashboard layout
   return (
     <AuthenticatedShell>
       <Switch>
@@ -120,6 +119,16 @@ function Router() {
           component={(props) => (
             <PrivateRoute 
               component={AIChat} 
+              isAuthenticated={isAuthenticated} 
+              {...props} 
+            />
+          )} 
+        />
+        <Route 
+          path="/ai-recommendations" 
+          component={(props) => (
+            <PrivateRoute 
+              component={AIRecommendations} 
               isAuthenticated={isAuthenticated} 
               {...props} 
             />

@@ -2,6 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Keep existing tables
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -30,6 +31,29 @@ export const notes = pgTable("notes", {
   sharedWith: text("shared_with").array(),
 });
 
+// Add new table for study preferences
+export const studyPreferences = pgTable("study_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  subjects: text("subjects").array(),
+  learningStyle: text("learning_style"),
+  studyGoals: text("study_goals"),
+  difficultyLevel: text("difficulty_level"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Add new table for AI recommendations
+export const studyRecommendations = pgTable("study_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  subject: text("subject").notNull(),
+  recommendation: text("recommendation").notNull(),
+  resources: text("resources"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  status: text("status").notNull().default("active"),
+});
+
+// Keep existing schemas
 export const insertUserSchema = createInsertSchema(users, {
   avatar: z.string().nullable(),
 });
@@ -44,10 +68,28 @@ export const insertNoteSchema = createInsertSchema(notes, {
   sharedWith: z.array(z.string()).nullable(),
 });
 
+// Add new schemas for study preferences and recommendations
+export const insertStudyPreferencesSchema = createInsertSchema(studyPreferences, {
+  subjects: z.array(z.string()),
+  learningStyle: z.string(),
+  studyGoals: z.string(),
+  difficultyLevel: z.string(),
+});
+
+export const insertStudyRecommendationSchema = createInsertSchema(studyRecommendations, {
+  resources: z.string().nullable(),
+});
+
+// Keep existing types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type InsertNote = z.infer<typeof insertNoteSchema>;
 
+// Add new types
+export type InsertStudyPreferences = z.infer<typeof insertStudyPreferencesSchema>;
+export type InsertStudyRecommendation = z.infer<typeof insertStudyRecommendationSchema>;
 export type User = typeof users.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type Note = typeof notes.$inferSelect;
+export type StudyPreferences = typeof studyPreferences.$inferSelect;
+export type StudyRecommendation = typeof studyRecommendations.$inferSelect;
