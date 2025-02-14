@@ -45,6 +45,10 @@ export function Header({ onLogout }: HeaderProps) {
 
     setIsLoggingOut(true);
     try {
+      // First clear local state
+      setUser(null);
+
+      // Then make the logout request
       const response = await fetch('/auth/logout', {
         method: 'POST',
         credentials: 'include',
@@ -54,19 +58,28 @@ export function Header({ onLogout }: HeaderProps) {
       });
 
       if (response.ok) {
-        setUser(null);
+        // Call the onLogout callback first
         onLogout();
-        // Only redirect after successful logout
-        setLocation('/');
+
+        // Show success message
         toast({
           title: "Logged out successfully",
           description: "You have been logged out of your account",
         });
+
+        // Finally redirect to home page
+        window.location.href = '/';
       } else {
         throw new Error('Logout failed');
       }
     } catch (error) {
       console.error('Logout failed:', error);
+      // Restore user state on error
+      const response = await fetch('/api/user');
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      }
       toast({
         title: "Error",
         description: "Failed to log out. Please try again.",
