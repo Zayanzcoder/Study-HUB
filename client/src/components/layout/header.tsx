@@ -13,12 +13,14 @@ import { User } from "@shared/schema";
 import { useState, useEffect } from 'react';
 import { LoginButton } from "@/components/ui/login-button";
 import { Settings, User as UserIcon, Key, LogOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
   onLogout: () => void;
 }
 
 export function Header({ onLogout }: HeaderProps) {
+  const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [, setLocation] = useLocation();
 
@@ -37,9 +39,25 @@ export function Header({ onLogout }: HeaderProps) {
     getUser();
   }, []);
 
-  const handleLogout = () => {
-    onLogout();
-    setLocation('/');
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/auth/logout');
+      if (response.ok) {
+        onLogout();
+        setLocation('/');
+        toast({
+          title: "Logged out successfully",
+          description: "You have been logged out of your account",
+        });
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
