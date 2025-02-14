@@ -3,10 +3,8 @@ import { createServer } from "http";
 import passport from 'passport';
 import session from 'express-session';
 import { storage } from "./storage";
-import { getAIResponse } from "./ai";
 import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
 import { z } from "zod";
-import { PythonShell } from 'python-shell';
 
 declare global {
   namespace Express {
@@ -134,75 +132,17 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Temporarily disabled AI features
   app.post("/api/notes/generate", async (req, res) => {
-    try {
-      const { topic, context } = z.object({
-        topic: z.string(),
-        context: z.string().optional()
-      }).parse(req.body);
-
-      let options = {
-        mode: 'text' as const,
-        pythonPath: 'python3',
-        scriptPath: './server',
-        args: ['generate', topic]
-      };
-
-      if (context) {
-        options.args.push(context);
-      }
-
-      try {
-        const messages = await PythonShell.run('ai.py', options);
-        const content = messages[messages.length - 1];
-        res.json({ content });
-      } catch (error: any) {
-        console.error("Note generation error:", error);
-        res.status(400).json({ 
-          error: "Failed to generate note",
-          message: error.message 
-        });
-      }
-    } catch (error: any) {
-      console.error("Note generation error:", error);
-      res.status(400).json({ 
-        error: "Failed to generate note",
-        message: error.message 
-      });
-    }
+    res.json({ 
+      content: "Note generation is temporarily unavailable." 
+    });
   });
 
   app.post("/api/notes/transcribe", async (req, res) => {
-    try {
-      const { audioData } = z.object({
-        audioData: z.string()
-      }).parse(req.body);
-
-      let options = {
-        mode: 'text' as const,
-        pythonPath: 'python3',
-        scriptPath: './server',
-        args: ['transcribe', audioData]
-      };
-
-      try {
-        const messages = await PythonShell.run('ai.py', options);
-        const text = messages[messages.length - 1];
-        res.json({ text });
-      } catch (error: any) {
-        console.error("Transcription error:", error);
-        res.status(400).json({ 
-          error: "Failed to transcribe audio",
-          message: error.message 
-        });
-      }
-    } catch (error: any) {
-      console.error("Transcription error:", error);
-      res.status(400).json({ 
-        error: "Failed to transcribe audio",
-        message: error.message 
-      });
-    }
+    res.json({ 
+      text: "Voice transcription is temporarily unavailable." 
+    });
   });
 
   app.get('/api/study-preferences', async (req, res) => {
@@ -268,25 +208,11 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Temporarily disabled AI chat
   app.post("/api/ai/chat", async (req, res) => {
-    try {
-      const { prompt } = z.object({ prompt: z.string() }).parse(req.body);
-      const response = await getAIResponse(prompt);
-      res.json({ response });
-    } catch (error: any) {
-      console.error("AI chat error:", error);
-      if (error.status === 429) {
-        res.status(503).json({ 
-          error: "AI service is currently unavailable", 
-          message: error.message 
-        });
-      } else {
-        res.status(400).json({ 
-          error: "Failed to process request",
-          message: error.message || "An unexpected error occurred"
-        });
-      }
-    }
+    res.json({ 
+      response: "AI chat is temporarily unavailable." 
+    });
   });
 
   const httpServer = createServer(app);
