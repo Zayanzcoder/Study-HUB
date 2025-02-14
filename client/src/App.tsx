@@ -10,6 +10,7 @@ import Tasks from "@/pages/tasks";
 import Notes from "@/pages/notes";
 import AIChat from "@/pages/ai-chat";
 import NotFound from "@/pages/not-found";
+import Profile from "@/pages/profile";
 
 function PrivateRoute({ component: Component, isAuthenticated, ...rest }: any) {
   const [, setLocation] = useLocation();
@@ -119,6 +120,16 @@ function Router() {
           component={(props) => (
             <PrivateRoute 
               component={AIChat} 
+              isAuthenticated={isAuthenticated} 
+              {...props} 
+            />
+          )} 
+        />
+        <Route 
+          path="/profile" 
+          component={(props) => (
+            <PrivateRoute 
+              component={Profile} 
               isAuthenticated={isAuthenticated} 
               {...props} 
             />
