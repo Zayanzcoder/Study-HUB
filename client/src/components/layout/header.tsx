@@ -41,16 +41,21 @@ export function Header({ onLogout }: HeaderProps) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/auth/logout', {
-        method: 'POST'
+      const response = await fetch('/auth/google/logout', {
+        method: 'POST',
+        credentials: 'include'
       });
+
       if (response.ok) {
+        setUser(null);
         onLogout();
         setLocation('/');
         toast({
           title: "Logged out successfully",
           description: "You have been logged out of your account",
         });
+      } else {
+        throw new Error('Logout failed');
       }
     } catch (error) {
       console.error('Logout failed:', error);
