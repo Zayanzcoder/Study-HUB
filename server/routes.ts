@@ -3,7 +3,7 @@ import { createServer } from "http";
 import passport from 'passport';
 import session from 'express-session';
 import { storage } from "./storage";
-import { getAIResponse } from "./ai";
+import { getAIResponse, generateNoteContent, transcribeAudio } from "./ai";
 import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
 import { z } from "zod";
 
@@ -133,6 +133,43 @@ export function registerRoutes(app: Express) {
       res.status(204).send();
     } catch (error) {
       res.status(404).json({ error: "Note not found" });
+    }
+  });
+
+  // AI note generation endpoint
+  app.post("/api/notes/generate", async (req, res) => {
+    try {
+      const { topic, context } = z.object({
+        topic: z.string(),
+        context: z.string().optional()
+      }).parse(req.body);
+
+      const content = await generateNoteContent(topic, context);
+      res.json({ content });
+    } catch (error: any) {
+      console.error("Note generation error:", error);
+      res.status(400).json({ 
+        error: "Failed to generate note",
+        message: error.message 
+      });
+    }
+  });
+
+  // Voice transcription endpoint
+  app.post("/api/notes/transcribe", async (req, res) => {
+    try {
+      const { audioData } = z.object({
+        audioData: z.string()
+      }).parse(req.body);
+
+      const transcription = await transcribeAudio(audioData);
+      res.json({ text: transcription });
+    } catch (error: any) {
+      console.error("Transcription error:", error);
+      res.status(400).json({ 
+        error: "Failed to transcribe audio",
+        message: error.message 
+      });
     }
   });
 

@@ -17,6 +17,8 @@ import { Switch } from "@/components/ui/switch";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NoteEditor } from "./note-editor";
+import { Wand2 } from "lucide-react";
+import { VoiceRecorder } from "./voice-recorder";
 
 interface NoteFormProps {
   open: boolean;
@@ -34,6 +36,7 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
       isPublic: false,
       userId: 1, // Hardcoded for demo
       sharedWith: [],
+      topic: "", // Added default value for topic
     },
   });
 
@@ -99,6 +102,63 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 </FormItem>
               )}
             />
+            <div className="flex items-center justify-between space-x-2">
+              <FormField
+                control={form.control}
+                name="topic"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Topic for AI Generation (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter topic for AI to generate notes about" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-8"
+                onClick={async () => {
+                  const topic = form.getValues("topic");
+                  if (!topic) {
+                    toast({
+                      title: "Topic required",
+                      description: "Please enter a topic for AI to generate notes about",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+
+                  try {
+                    const response = await fetch("/api/notes/generate", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ topic }),
+                    });
+
+                    if (!response.ok) {
+                      throw new Error("Failed to generate notes");
+                    }
+
+                    const { content } = await response.json();
+                    form.setValue("content", content);
+                  } catch (error) {
+                    toast({
+                      title: "Generation failed",
+                      description: "Failed to generate notes. Please try again.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                disabled={createNote.isPending}
+              >
+                <Wand2 className="h-4 w-4 mr-2" />
+                Generate
+              </Button>
+            </div>
+
             <FormField
               control={form.control}
               name="content"
@@ -106,8 +166,8 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <NoteEditor 
-                      value={field.value} 
+                    <NoteEditor
+                      value={field.value}
                       onChange={field.onChange}
                       disabled={createNote.isPending}
                     />
@@ -116,6 +176,16 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 </FormItem>
               )}
             />
+            <div className="flex items-center justify-between space-x-2">
+              <FormLabel>Voice Input</FormLabel>
+              <VoiceRecorder
+                onTranscription={(text) => {
+                  const currentContent = form.getValues("content");
+                  form.setValue("content", currentContent ? `${currentContent}\n\n${text}` : text);
+                }}
+                disabled={createNote.isPending}
+              />
+            </div>
             <FormField
               control={form.control}
               name="isPublic"
@@ -137,8 +207,8 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full"
               disabled={createNote.isPending}
             >
