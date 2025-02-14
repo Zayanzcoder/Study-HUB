@@ -22,6 +22,7 @@ interface HeaderProps {
 export function Header({ onLogout }: HeaderProps) {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -40,6 +41,9 @@ export function Header({ onLogout }: HeaderProps) {
   }, []);
 
   const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple logout attempts
+
+    setIsLoggingOut(true);
     try {
       const response = await fetch('/auth/logout', {
         method: 'POST',
@@ -67,6 +71,8 @@ export function Header({ onLogout }: HeaderProps) {
         description: "Failed to log out. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -85,6 +91,7 @@ export function Header({ onLogout }: HeaderProps) {
                 <Button
                   variant="ghost"
                   className="relative h-8 w-8 rounded-full"
+                  disabled={isLoggingOut}
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.avatar || undefined} alt={user.name} />
@@ -111,9 +118,13 @@ export function Header({ onLogout }: HeaderProps) {
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="text-red-600 focus:text-red-600"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                  {isLoggingOut ? "Signing out..." : "Sign out"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
