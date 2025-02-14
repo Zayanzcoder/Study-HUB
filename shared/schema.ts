@@ -1,10 +1,10 @@
-import { pgTable, text, serial, bigint, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, varchar, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Keep existing tables
 export const users = pgTable("users", {
-  id: bigint("id", { mode: "number" }).primaryKey(),
+  id: varchar("id", { length: 255 }).primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
@@ -14,7 +14,7 @@ export const users = pgTable("users", {
 
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
-  userId: bigint("user_id", { mode: "number" }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   dueDate: timestamp("due_date"),
@@ -24,7 +24,7 @@ export const tasks = pgTable("tasks", {
 
 export const notes = pgTable("notes", {
   id: serial("id").primaryKey(),
-  userId: bigint("user_id", { mode: "number" }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
   isPublic: boolean("is_public").notNull().default(false),
@@ -34,7 +34,7 @@ export const notes = pgTable("notes", {
 // Update study preferences table
 export const studyPreferences = pgTable("study_preferences", {
   id: serial("id").primaryKey(),
-  userId: bigint("user_id", { mode: "number" }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
   subjects: text("subjects").array(),
   learningStyle: text("learning_style"),
   studyGoals: text("study_goals"),
@@ -45,7 +45,7 @@ export const studyPreferences = pgTable("study_preferences", {
 // Update study recommendations table
 export const studyRecommendations = pgTable("study_recommendations", {
   id: serial("id").primaryKey(),
-  userId: bigint("user_id", { mode: "number" }).notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
   subject: text("subject").notNull(),
   recommendation: text("recommendation").notNull(),
   resources: text("resources"),

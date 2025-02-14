@@ -69,7 +69,7 @@ export default function Home() {
                 <h3 className="text-2xl font-semibold mb-4">Meet Our Founder</h3>
                 <div className="flex items-start gap-6">
                   <img 
-                    src="/attached_assets/1739543476017.jpg"
+                    src="./attached_assets/1739543476017.jpg"
                     alt="Founder"
                     className="w-32 h-32 rounded-full object-cover border-4 border-white/20"
                   />
