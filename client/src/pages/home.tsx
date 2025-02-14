@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/components/ui/login-button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Mail, User } from "lucide-react";
 
 export default function Home() {
   return (
@@ -50,14 +52,50 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-center text-white"
+          className="text-white space-y-8"
         >
-          <h2 className="text-3xl font-bold mb-4">About Us</h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">
-            StudyHub is your all-in-one study companion, designed to help students stay organized
-            and productive. With our powerful tools and AI assistance, we make studying more
-            efficient and enjoyable.
-          </p>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-4">About StudyHub</h2>
+            <p className="text-gray-300 max-w-2xl mx-auto mb-8">
+              StudyHub is your all-in-one study companion, designed to help students stay organized
+              and productive. With our powerful tools and AI assistance, we make studying more
+              efficient and enjoyable.
+            </p>
+          </div>
+
+          <Card className="bg-white/10 backdrop-blur-lg border-none text-white max-w-3xl mx-auto">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-semibold mb-4">Meet Our Founder</h3>
+                <div className="flex items-start gap-4">
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <User className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-gray-300">
+                      I am a high school student currently studying in 11th grade under the CBSE curriculum in Saudi Arabia. 
+                      With a strong interest in technology and cybersecurity, I am preparing to pursue a Computer Science 
+                      degree at RWTH Aachen University in Germany. My focus is on building a career in cybersecurity, and 
+                      I am actively learning and developing skills in this field.
+                    </p>
+                    <p className="text-gray-300 mt-4">
+                      This website is designed to provide students with valuable resources and support for their academic journey. 
+                      My goal is to create a platform that simplifies learning and helps students achieve their academic goals efficiently.
+                    </p>
+                    <div className="flex items-center gap-2 mt-4">
+                      <Mail className="h-4 w-4 text-gray-300" />
+                      <a href="mailto:zayanzubair36@gmail.com" className="text-gray-300 hover:text-white transition-colors">
+                        zayanzubair36@gmail.com
+                      </a>
+                    </div>
+                    <p className="text-gray-300 mt-4 font-light italic">
+                      For any inquiries or collaborations, feel free to reach out.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </div>
