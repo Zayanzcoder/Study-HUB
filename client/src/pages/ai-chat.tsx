@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ type Message = {
   id: number;
   content: string;
   isUser: boolean;
+  isTyping?: boolean;
 };
 
 export default function AIChat() {
@@ -37,14 +38,7 @@ export default function AIChat() {
       });
     },
     onError: (error) => {
-      setMessages((prev) => [
-        ...prev,
-        { 
-          id: prev.length + 2, 
-          content: "I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.", 
-          isUser: false 
-        },
-      ]);
+      setMessages((prev) => prev.filter(msg => !msg.isTyping));
       toast({
         title: "Error",
         description: "Failed to get AI response. Please try again later.",
@@ -52,6 +46,11 @@ export default function AIChat() {
       });
     },
   });
+
+  // Get welcome message when component mounts
+  useEffect(() => {
+    chatMutation.mutate("");
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
