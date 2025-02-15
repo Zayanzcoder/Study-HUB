@@ -144,11 +144,32 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Temporarily disabled AI features
   app.post("/api/notes/generate", async (req, res) => {
-    res.json({ 
-      content: "Note generation is temporarily unavailable." 
-    });
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const { topic } = req.body;
+      if (!topic) {
+        return res.status(400).json({ error: 'Topic is required' });
+      }
+
+      // Get user's study preferences for context
+      const preferences = await storage.getStudyPreferences(req.user.id);
+
+      // Generate note content using Gemini
+      const { recommendation } = await generateStudyRecommendation({
+        subjects: [topic],
+        learningStyle: preferences?.learningStyle || 'visual',
+        studyGoals: `Generate detailed study notes about: ${topic}`,
+        difficultyLevel: preferences?.difficultyLevel || 'intermediate'
+      });
+
+      res.json({ content: recommendation });
+    } catch (error) {
+      console.error('Note generation error:', error);
+      res.status(500).json({ error: 'Failed to generate note content' });
+    }
   });
 
   app.post("/api/notes/transcribe", async (req, res) => {
