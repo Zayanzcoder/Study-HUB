@@ -3,7 +3,7 @@ import { createServer } from "http";
 import passport from 'passport';
 import session from 'express-session';
 import { storage } from "./storage";
-import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
+import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User, insertPracticeTestSchema, insertQuestionSchema, insertStudyScheduleSchema, insertStudyBlockSchema, insertResourceSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateStudyRecommendation, generateStudyNotes } from './services/ai';
 import { type AuthUser } from './auth';
@@ -313,6 +313,214 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error('AI Chat error:', error);
       res.status(500).json({ error: 'Failed to process chat message' });
+    }
+  });
+
+  // Add these new routes after the existing ones, before the createServer line
+
+  // Practice Tests routes
+  app.post("/api/practice-tests", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const test = insertPracticeTestSchema.parse(req.body);
+      const created = await storage.createPracticeTest(test);
+      res.json(created);
+    } catch (error: any) {
+      console.error("Practice test creation error:", error);
+      res.status(400).json({ error: "Invalid test data", details: error.message });
+    }
+  });
+
+  app.get("/api/practice-tests", async (req: Request, res) => {
+    try {
+      const tests = await storage.getPracticeTests();
+      res.json(tests);
+    } catch (error: any) {
+      console.error("Error fetching practice tests:", error);
+      res.status(500).json({ error: "Failed to fetch practice tests" });
+    }
+  });
+
+  app.get("/api/practice-tests/:id", async (req: Request, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const test = await storage.getPracticeTestById(id);
+      if (!test) {
+        return res.status(404).json({ error: "Practice test not found" });
+      }
+      const questions = await storage.getQuestionsForTest(id);
+      res.json({ ...test, questions });
+    } catch (error: any) {
+      console.error("Error fetching practice test:", error);
+      res.status(500).json({ error: "Failed to fetch practice test" });
+    }
+  });
+
+  app.post("/api/practice-tests/:id/questions", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const testId = parseInt(req.params.id);
+      const question = insertQuestionSchema.parse({ ...req.body, testId });
+      const created = await storage.addQuestionToPracticeTest(question);
+      res.json(created);
+    } catch (error: any) {
+      console.error("Question creation error:", error);
+      res.status(400).json({ error: "Invalid question data", details: error.message });
+    }
+  });
+
+  // Study Schedule routes
+  app.post("/api/study-schedules", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const schedule = insertStudyScheduleSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const created = await storage.createStudySchedule(schedule);
+      res.json(created);
+    } catch (error: any) {
+      console.error("Schedule creation error:", error);
+      res.status(400).json({ error: "Invalid schedule data", details: error.message });
+    }
+  });
+
+  app.get("/api/study-schedules", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const schedules = await storage.getUserStudySchedules(req.user.id);
+      res.json(schedules);
+    } catch (error: any) {
+      console.error("Error fetching study schedules:", error);
+      res.status(500).json({ error: "Failed to fetch study schedules" });
+    }
+  });
+
+  app.post("/api/study-blocks", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const block = insertStudyBlockSchema.parse(req.body);
+      const created = await storage.addStudyBlock(block);
+      res.json(created);
+    } catch (error: any) {
+      console.error("Study block creation error:", error);
+      res.status(400).json({ error: "Invalid block data", details: error.message });
+    }
+  });
+
+  app.patch("/api/study-blocks/:id", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateStudyBlock(id, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Study block update error:", error);
+      res.status(400).json({ error: "Failed to update study block" });
+    }
+  });
+
+  // Resource Library routes
+  app.post("/api/resources", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const resource = insertResourceSchema.parse({
+        ...req.body,
+        uploadedBy: req.user.id
+      });
+      const created = await storage.createResource(resource);
+      res.json(created);
+    } catch (error: any) {
+      console.error("Resource creation error:", error);
+      res.status(400).json({ error: "Invalid resource data", details: error.message });
+    }
+  });
+
+  app.get("/api/resources", async (req: Request, res) => {
+    try {
+      const { subject, grade } = req.query;
+      const resources = await storage.getResources(
+        subject as string | undefined,
+        grade ? parseInt(grade as string) : undefined
+      );
+      res.json(resources);
+    } catch (error: any) {
+      console.error("Error fetching resources:", error);
+      res.status(500).json({ error: "Failed to fetch resources" });
+    }
+  });
+
+  // Gamification routes
+  app.get("/api/achievements", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const achievements = await storage.getAchievements();
+      const userAchievements = await storage.getUserAchievements(req.user.id);
+      res.json({
+        available: achievements,
+        earned: userAchievements
+      });
+    } catch (error: any) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ error: "Failed to fetch achievements" });
+    }
+  });
+
+  app.post("/api/achievements/:id/award", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const achievementId = parseInt(req.params.id);
+      const awarded = await storage.awardAchievementToUser(req.user.id, achievementId);
+      res.json(awarded);
+    } catch (error: any) {
+      console.error("Error awarding achievement:", error);
+      res.status(500).json({ error: "Failed to award achievement" });
+    }
+  });
+
+  app.patch("/api/users/points", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const { points } = req.body;
+      const updated = await storage.updateUserPoints(req.user.id, points);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating points:", error);
+      res.status(500).json({ error: "Failed to update points" });
+    }
+  });
+
+  app.patch("/api/users/streak", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const { streak } = req.body;
+      const updated = await storage.updateUserStreak(req.user.id, streak);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating streak:", error);
+      res.status(500).json({ error: "Failed to update streak" });
     }
   });
 

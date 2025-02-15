@@ -1,11 +1,21 @@
 import { IStorage } from "./types";
-import { User, Task, Note, InsertUser, InsertTask, InsertNote, studyPreferences, studyRecommendations, StudyPreferences, StudyRecommendation, InsertStudyPreferences, InsertStudyRecommendation } from "@shared/schema";
+import { 
+  User, Task, Note, InsertUser, InsertTask, InsertNote,
+  studyPreferences, studyRecommendations, StudyPreferences, StudyRecommendation,
+  InsertStudyPreferences, InsertStudyRecommendation,
+  practiceTests, questions, studySchedules, studyBlocks, resources,
+  achievements, userAchievements,
+  PracticeTest, Question, StudySchedule, StudyBlock, Resource,
+  Achievement, UserAchievement,
+  insertPracticeTestSchema, insertQuestionSchema, insertStudyScheduleSchema,
+  insertStudyBlockSchema, insertResourceSchema, insertAchievementSchema
+} from "@shared/schema";
 import { users, tasks, notes } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -18,6 +28,134 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  // Practice Tests methods
+  async createPracticeTest(test: typeof insertPracticeTestSchema._type): Promise<PracticeTest> {
+    const [created] = await db.insert(practiceTests).values(test).returning();
+    return created;
+  }
+
+  async getPracticeTests(): Promise<PracticeTest[]> {
+    return await db.select().from(practiceTests);
+  }
+
+  async getPracticeTestById(id: number): Promise<PracticeTest | undefined> {
+    const [test] = await db.select().from(practiceTests).where(eq(practiceTests.id, id));
+    return test;
+  }
+
+  async addQuestionToPracticeTest(question: typeof insertQuestionSchema._type): Promise<Question> {
+    const [created] = await db.insert(questions).values(question).returning();
+    return created;
+  }
+
+  async getQuestionsForTest(testId: number): Promise<Question[]> {
+    return await db.select().from(questions).where(eq(questions.testId, testId));
+  }
+
+  // Study Schedule methods
+  async createStudySchedule(schedule: typeof insertStudyScheduleSchema._type): Promise<StudySchedule> {
+    const [created] = await db.insert(studySchedules).values(schedule).returning();
+    return created;
+  }
+
+  async getUserStudySchedules(userId: string): Promise<StudySchedule[]> {
+    return await db.select()
+      .from(studySchedules)
+      .where(eq(studySchedules.userId, userId))
+      .orderBy(studySchedules.startDate);
+  }
+
+  async addStudyBlock(block: typeof insertStudyBlockSchema._type): Promise<StudyBlock> {
+    const [created] = await db.insert(studyBlocks).values(block).returning();
+    return created;
+  }
+
+  async getStudyBlocksForSchedule(scheduleId: number): Promise<StudyBlock[]> {
+    return await db.select()
+      .from(studyBlocks)
+      .where(eq(studyBlocks.scheduleId, scheduleId))
+      .orderBy(studyBlocks.startTime);
+  }
+
+  async updateStudyBlock(id: number, updates: Partial<StudyBlock>): Promise<StudyBlock> {
+    const [updated] = await db
+      .update(studyBlocks)
+      .set(updates)
+      .where(eq(studyBlocks.id, id))
+      .returning();
+    if (!updated) throw new Error("Study block not found");
+    return updated;
+  }
+
+  // Resource Library methods
+  async createResource(resource: typeof insertResourceSchema._type): Promise<Resource> {
+    const [created] = await db.insert(resources).values(resource).returning();
+    return created;
+  }
+
+  async getResources(subject?: string, grade?: number): Promise<Resource[]> {
+    let query = db.select().from(resources);
+    if (subject) {
+      query = query.where(eq(resources.subject, subject));
+    }
+    if (grade) {
+      query = query.where(eq(resources.grade, grade));
+    }
+    return await query;
+  }
+
+  async getResourceById(id: number): Promise<Resource | undefined> {
+    const [resource] = await db.select().from(resources).where(eq(resources.id, id));
+    return resource;
+  }
+
+  // Gamification methods
+  async createAchievement(achievement: typeof insertAchievementSchema._type): Promise<Achievement> {
+    const [created] = await db.insert(achievements).values(achievement).returning();
+    return created;
+  }
+
+  async getAchievements(): Promise<Achievement[]> {
+    return await db.select().from(achievements);
+  }
+
+  async awardAchievementToUser(userId: string, achievementId: number): Promise<UserAchievement> {
+    const [awarded] = await db.insert(userAchievements)
+      .values({ userId, achievementId })
+      .returning();
+    return awarded;
+  }
+
+  async getUserAchievements(userId: string): Promise<UserAchievement[]> {
+    return await db.select()
+      .from(userAchievements)
+      .where(eq(userAchievements.userId, userId));
+  }
+
+  async updateUserPoints(userId: string, points: number): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({
+        totalPoints: points
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!updated) throw new Error("User not found");
+    return updated;
+  }
+
+  async updateUserStreak(userId: string, streak: number): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({
+        currentStreak: streak
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!updated) throw new Error("User not found");
+    return updated;
   }
 
   async createTask(insertTask: InsertTask): Promise<Task> {
@@ -48,7 +186,7 @@ export class DatabaseStorage implements IStorage {
     return note;
   }
 
-  async getUserNotes(userId: number): Promise<Note[]> {
+  async getUserNotes(userId: string): Promise<Note[]> {
     return await db
       .select()
       .from(notes)
@@ -69,8 +207,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(notes).where(eq(notes.id, id));
   }
 
-  // New methods for study preferences
-  async getStudyPreferences(userId: number): Promise<StudyPreferences | undefined> {
+  async getStudyPreferences(userId: string): Promise<StudyPreferences | undefined> {
     const [prefs] = await db
       .select()
       .from(studyPreferences)
@@ -78,7 +215,7 @@ export class DatabaseStorage implements IStorage {
     return prefs;
   }
 
-  async createOrUpdateStudyPreferences(userId: number, prefs: Partial<InsertStudyPreferences>): Promise<StudyPreferences> {
+  async createOrUpdateStudyPreferences(userId: string, prefs: Partial<InsertStudyPreferences>): Promise<StudyPreferences> {
     const existingPrefs = await this.getStudyPreferences(userId);
 
     if (existingPrefs) {
@@ -97,8 +234,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Methods for study recommendations
-  async createRecommendation(userId: number, rec: Omit<InsertStudyRecommendation, "userId">): Promise<StudyRecommendation> {
+  async createRecommendation(userId: string, rec: Omit<InsertStudyRecommendation, "userId">): Promise<StudyRecommendation> {
     const [recommendation] = await db
       .insert(studyRecommendations)
       .values({ ...rec, userId })
@@ -106,7 +242,7 @@ export class DatabaseStorage implements IStorage {
     return recommendation;
   }
 
-  async getUserRecommendations(userId: number): Promise<StudyRecommendation[]> {
+  async getUserRecommendations(userId: string): Promise<StudyRecommendation[]> {
     return await db
       .select()
       .from(studyRecommendations)
