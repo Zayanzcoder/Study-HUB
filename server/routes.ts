@@ -80,20 +80,13 @@ export function registerRoutes(app: Express) {
     // Handle regular chat messages using OpenAI
     try {
       const message = req.body.message;
-      if (!message || typeof message !== 'string') {
-        return res.status(400).json({ 
-          error: 'Invalid message',
-          message: 'Please provide a valid message.'
-        });
-      }
-
       const response = await analyzeChatMessage(message);
       res.json({ response });
-    } catch (error: any) {
+    } catch (error) {
       console.error('AI Chat error:', error);
       res.status(500).json({ 
         error: 'Failed to process chat message',
-        message: error.message || 'Our AI service is experiencing issues. Please try again later.'
+        message: 'Our AI service is experiencing issues. Please try again later.'
       });
     }
   });

@@ -23,10 +23,6 @@ export default function AIChat() {
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
       const res = await apiRequest("POST", "/api/ai/chat", { message });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to get AI response');
-      }
       return res.json();
     },
     onMutate: (message) => {
@@ -36,7 +32,6 @@ export default function AIChat() {
         { id: Date.now(), content: message, isUser: true },
         { id: Date.now() + 1, content: "", isUser: false, isTyping: true },
       ]);
-      setInput(""); // Clear input immediately after sending
     },
     onSuccess: (data) => {
       setMessages((prev) => {
@@ -44,11 +39,11 @@ export default function AIChat() {
         return [...filtered, { id: Date.now(), content: data.response, isUser: false }];
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       setMessages((prev) => prev.filter(msg => !msg.isTyping));
       toast({
         title: "Error",
-        description: error.message || "Failed to get AI response. Please try again later.",
+        description: "Failed to get AI response. Please try again later.",
         variant: "destructive",
       });
     },
@@ -64,6 +59,7 @@ export default function AIChat() {
     if (!input.trim()) return;
 
     chatMutation.mutate(input);
+    setInput("");
   };
 
   return (
