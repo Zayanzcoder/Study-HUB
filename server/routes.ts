@@ -5,6 +5,7 @@ import session from 'express-session';
 import { storage } from "./storage";
 import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
 import { z } from "zod";
+import { generateStudyRecommendation } from './services/ai';
 
 declare global {
   namespace Express {
@@ -205,50 +206,23 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: 'Study preferences not set' });
       }
 
-      // Generate detailed, personalized recommendation based on preferences
-      const recommendation = await storage.createRecommendation(req.user.id, {
+      // Generate personalized recommendation using Gemini
+      const { recommendation, resources } = await generateStudyRecommendation({
+        subjects: preferences.subjects || [],
+        learningStyle: preferences.learningStyle || 'visual',
+        studyGoals: preferences.studyGoals || '',
+        difficultyLevel: preferences.difficultyLevel || 'intermediate'
+      });
+
+      // Create and store the recommendation
+      const newRecommendation = await storage.createRecommendation(req.user.id, {
         subject: preferences.subjects?.[0] || 'General',
-        recommendation: `Based on your ${preferences.learningStyle} learning style and ${preferences.difficultyLevel} difficulty preference, here's a detailed study plan:
-201:
-202:1. Primary Focus Areas:
-203:   - Key concepts in ${preferences.subjects?.[0] || 'your chosen subject'}
-204:   - Practice exercises aligned with your current level
-205:   - Interactive learning materials
-206:
-207:2. Study Schedule:
-208:   - Break down topics into manageable chunks
-209:   - Allocate specific time blocks for different learning activities
-210:   - Include regular review sessions
-211:
-212:3. Learning Resources:
-213:   - Interactive online courses from platforms like Coursera and edX
-214:   - Practice problems from Khan Academy
-215:   - Supplementary video tutorials
-216:   - Peer study groups for collaborative learning
-217:
-218:4. Progress Tracking:
-219:   - Regular self-assessments
-220:   - Practice tests
-221:   - Project-based learning activities`,
-        resources: `
-223:1. Online Platforms:
-224:   - Khan Academy: Interactive exercises and video tutorials
-225:   - Coursera: Professional certificates and specialized courses
-226:   - edX: University-level courses
-227:
-228:2. Tools:
-229:   - Anki: For spaced repetition learning
-230:   - Notion: For organizing study materials
-231:   - Microsoft OneNote/Evernote: For detailed note-taking
-232:
-233:3. Additional Resources:
-234:   - Subject-specific textbooks
-235:   - Online forums for peer discussion
-236:   - Educational YouTube channels`,
+        recommendation,
+        resources,
         status: 'active'
       });
 
-      res.json(recommendation);
+      res.json(newRecommendation);
     } catch (error) {
       console.error('Error generating recommendation:', error);
       res.status(500).json({ error: 'Failed to generate recommendation' });
