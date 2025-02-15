@@ -21,20 +21,22 @@ export default function AIChat() {
   const [input, setInput] = useState("");
 
   const chatMutation = useMutation({
-    mutationFn: async (prompt: string) => {
-      const res = await apiRequest("POST", "/api/ai/chat", { prompt });
+    mutationFn: async (message: string) => {
+      const res = await apiRequest("POST", "/api/ai/chat", { message });
       return res.json();
     },
-    onMutate: () => {
+    onMutate: (message) => {
+      // Add user message immediately
       setMessages((prev) => [
         ...prev,
-        { id: prev.length + 2, content: "typing", isUser: false, isTyping: true },
+        { id: Date.now(), content: message, isUser: true },
+        { id: Date.now() + 1, content: "", isUser: false, isTyping: true },
       ]);
     },
     onSuccess: (data) => {
       setMessages((prev) => {
         const filtered = prev.filter(msg => !msg.isTyping);
-        return [...filtered, { id: prev.length + 2, content: data.response, isUser: false }];
+        return [...filtered, { id: Date.now(), content: data.response, isUser: false }];
       });
     },
     onError: (error) => {
@@ -56,10 +58,6 @@ export default function AIChat() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: prev.length + 1, content: input, isUser: true },
-    ]);
     chatMutation.mutate(input);
     setInput("");
   };

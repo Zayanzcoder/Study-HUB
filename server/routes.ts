@@ -7,10 +7,38 @@ import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User,
 import { z } from "zod";
 import { generateStudyRecommendation, generateStudyNotes } from './services/ai';
 import { type AuthUser } from './auth';
+import OpenAI from "openai";
 
 declare global {
   namespace Express {
     interface User extends AuthUser {}
+  }
+}
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+async function analyzeChatMessage(message: string): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful AI tutor specializing in CBSE/NCERT curriculum. Help students understand concepts, solve problems, and provide study guidance. Keep responses focused on academic content and learning."
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    });
+
+    return response.choices[0].message.content || "I apologize, I couldn't process that request.";
+  } catch (error: any) {
+    console.error("OpenAI API error:", error);
+    return "I'm sorry, I'm having trouble understanding your request. Please try again later.";
   }
 }
 
@@ -24,7 +52,44 @@ export function registerRoutes(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Auth routes remain unchanged
+  // Enable AI chat with welcome message
+  app.post("/api/ai/chat", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // If this is the first message, return the welcome message
+    if (!req.body.message) {
+      return res.json({ 
+        response: `Hi there! I'm Zoha, your personal study companion at Study Hub! 👋
+
+        I'm here to help you excel in your CBSE/NCERT studies. Whether you need help understanding concepts, creating study plans, or preparing for exams, I'm here to support you.
+
+        What would you like help with today? You can:
+        - Ask questions about your NCERT subjects
+        - Get help with specific topics or concepts
+        - Request study tips and strategies
+        - Get guidance on exam preparation
+
+        Feel free to ask me anything!`
+      });
+    }
+
+    // Handle regular chat messages using OpenAI
+    try {
+      const message = req.body.message;
+      const response = await analyzeChatMessage(message);
+      res.json({ response });
+    } catch (error) {
+      console.error('AI Chat error:', error);
+      res.status(500).json({ 
+        error: 'Failed to process chat message',
+        message: 'Our AI service is experiencing issues. Please try again later.'
+      });
+    }
+  });
+
+  // Auth routes
   app.get('/auth/google',
     passport.authenticate('google', { 
       scope: ['profile', 'email'],
@@ -281,44 +346,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Enable AI chat with welcome message
-  app.post("/api/ai/chat", async (req: Request, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
 
-    // If this is the first message, return the welcome message
-    if (!req.body.message) {
-      return res.json({ 
-        response: `Hi there! I'm Zoha, your personal study companion at Study Hub! 👋
-
-        I'm here to help you excel in your CBSE/NCERT studies. Whether you need help understanding concepts, creating study plans, or preparing for exams, I'm here to support you.
-
-        What would you like help with today? You can:
-        - Ask questions about your NCERT subjects
-        - Get help with specific topics or concepts
-        - Request study tips and strategies
-        - Get guidance on exam preparation
-
-        Feel free to ask me anything!`
-      });
-    }
-
-    // Handle regular chat messages here when we implement the full chat functionality
-    try {
-      // For now, return a placeholder message
-      res.json({ 
-        response: "I'm currently being upgraded to better assist you. Please try the AI Study Recommendations feature for personalized study help!" 
-      });
-    } catch (error) {
-      console.error('AI Chat error:', error);
-      res.status(500).json({ error: 'Failed to process chat message' });
-    }
-  });
-
-  // Add these new routes after the existing ones, before the createServer line
-
-  // Practice Tests routes
   app.post("/api/practice-tests", async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
