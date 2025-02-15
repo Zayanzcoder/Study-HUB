@@ -6,14 +6,26 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { googleConfig } from './config/google';
 import session from 'express-session';
+import { db } from "./db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(session({ secret: 'your-session-secret', resave: false, saveUninitialized: true })); // Add session middleware
+
+// Configure session middleware
+const sessionMiddleware = session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+});
+
+app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
-
 
 // Initialize passport and session middleware
 passport.use(new GoogleStrategy({
@@ -42,6 +54,8 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
+
+// Custom logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -92,7 +106,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const PORT = 5000;
+  const PORT = process.env.PORT || 5000;
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);
   });

@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer } from "http";
 import passport from 'passport';
 import session from 'express-session';
@@ -6,10 +6,11 @@ import { storage } from "./storage";
 import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
 import { z } from "zod";
 import { generateStudyRecommendation, generateStudyNotes } from './services/ai';
+import { type AuthUser } from './auth';
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    interface User extends AuthUser {}
   }
 }
 
@@ -23,6 +24,7 @@ export function registerRoutes(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Auth routes remain unchanged
   app.get('/auth/google',
     passport.authenticate('google', { 
       scope: ['profile', 'email'],
@@ -35,30 +37,29 @@ export function registerRoutes(app: Express) {
       failureRedirect: '/',
       failureMessage: true
     }),
-    (req, res) => {
+    (req:Request, res) => {
       console.log('Google auth successful');
       res.redirect('/dashboard');
     }
   );
 
-  app.get('/auth/status', (req, res) => {
+  // Auth status routes
+  app.get('/auth/status', (req: Request, res) => {
     res.json({ 
       authenticated: req.isAuthenticated(),
       user: req.user 
     });
   });
 
-  app.post('/auth/logout', (req, res) => {
-    req.logout(() => {
-      res.redirect('/');
-    });
+  // Update all routes to use proper typing
+  app.get('/api/user', (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    res.json(req.user);
   });
 
-  app.get('/api/user', (req, res) => {
-    res.json(req.user || null);
-  });
-
-  app.post("/api/tasks", async (req, res) => {
+  app.post("/api/tasks", async (req: Request, res) => {
     try {
       const task = insertTaskSchema.parse(req.body);
       // Ensure task.userId is a string
@@ -73,7 +74,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/tasks/:userId", async (req, res) => {
+  app.get("/api/tasks/:userId", async (req: Request, res) => {
     try {
       const userId = req.params.userId;
       const tasks = await storage.getUserTasks(userId);
@@ -84,7 +85,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/tasks/:id", async (req, res) => {
+  app.patch("/api/tasks/:id", async (req: Request, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -96,7 +97,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/tasks/:id", async (req, res) => {
+  app.delete("/api/tasks/:id", async (req: Request, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteTask(id);
@@ -106,7 +107,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/notes", async (req, res) => {
+  app.post("/api/notes", async (req: Request, res) => {
     try {
       const note = insertNoteSchema.parse(req.body);
       const created = await storage.createNote(note);
@@ -117,13 +118,13 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/notes/:userId", async (req, res) => {
+  app.get("/api/notes/:userId", async (req: Request, res) => {
     const userId = parseInt(req.params.userId);
     const notes = await storage.getUserNotes(userId);
     res.json(notes);
   });
 
-  app.patch("/api/notes/:id", async (req, res) => {
+  app.patch("/api/notes/:id", async (req: Request, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -134,7 +135,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/notes/:id", async (req, res) => {
+  app.delete("/api/notes/:id", async (req: Request, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteNote(id);
@@ -144,7 +145,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/notes/generate", async (req, res) => {
+  app.post("/api/notes/generate", async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -188,13 +189,13 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/notes/transcribe", async (req, res) => {
+  app.post("/api/notes/transcribe", async (req: Request, res) => {
     res.json({ 
       text: "Voice transcription is temporarily unavailable." 
     });
   });
 
-  app.get('/api/study-preferences', async (req, res) => {
+  app.get('/api/study-preferences', async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -207,7 +208,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post('/api/study-preferences', async (req, res) => {
+  app.post('/api/study-preferences', async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -220,7 +221,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get('/api/recommendations', async (req, res) => {
+  app.get('/api/recommendations', async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -233,7 +234,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post('/api/recommendations/generate', async (req, res) => {
+  app.post('/api/recommendations/generate', async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -266,7 +267,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.delete('/api/recommendations/:id', async (req, res) => {
+  app.delete('/api/recommendations/:id', async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -281,7 +282,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Enable AI chat with welcome message
-  app.post("/api/ai/chat", async (req, res) => {
+  app.post("/api/ai/chat", async (req: Request, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
