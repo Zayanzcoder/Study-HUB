@@ -194,10 +194,46 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: 'Study preferences not set' });
       }
 
+      // Generate detailed, personalized recommendation based on preferences
       const recommendation = await storage.createRecommendation(req.user.id, {
         subject: preferences.subjects?.[0] || 'General',
-        recommendation: 'Based on your learning style and goals, we recommend focusing on interactive learning methods.',
-        resources: 'Khan Academy, Coursera, and practice exercises',
+        recommendation: `Based on your ${preferences.learningStyle} learning style and ${preferences.difficultyLevel} difficulty preference, here's a detailed study plan:
+
+1. Primary Focus Areas:
+   - Key concepts in ${preferences.subjects?.[0] || 'your chosen subject'}
+   - Practice exercises aligned with your current level
+   - Interactive learning materials
+
+2. Study Schedule:
+   - Break down topics into manageable chunks
+   - Allocate specific time blocks for different learning activities
+   - Include regular review sessions
+
+3. Learning Resources:
+   - Interactive online courses from platforms like Coursera and edX
+   - Practice problems from Khan Academy
+   - Supplementary video tutorials
+   - Peer study groups for collaborative learning
+
+4. Progress Tracking:
+   - Regular self-assessments
+   - Practice tests
+   - Project-based learning activities`,
+        resources: `
+1. Online Platforms:
+   - Khan Academy: Interactive exercises and video tutorials
+   - Coursera: Professional certificates and specialized courses
+   - edX: University-level courses
+
+2. Tools:
+   - Anki: For spaced repetition learning
+   - Notion: For organizing study materials
+   - Microsoft OneNote/Evernote: For detailed note-taking
+
+3. Additional Resources:
+   - Subject-specific textbooks
+   - Online forums for peer discussion
+   - Educational YouTube channels`,
         status: 'active'
       });
 
