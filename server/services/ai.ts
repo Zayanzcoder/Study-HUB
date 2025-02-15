@@ -18,15 +18,40 @@ Difficulty Level: ${preferences.difficultyLevel}
 Study Goals: ${preferences.studyGoals}
 Subjects: ${preferences.subjects.join(', ')}
 
-Generate a comprehensive study plan that includes:
-1. A detailed roadmap for the primary subject (${preferences.subjects[0]})
-2. Specific learning strategies tailored to their ${preferences.learningStyle} learning style
-3. Concrete, actionable steps to achieve their goals: ${preferences.studyGoals}
-4. Recommended resources and tools
-5. Practical exercises and assessments
-6. Time management suggestions
+Structure your response in the following format, using bullet points and clear sections:
 
-Format the response to be directly applicable and actionable.
+1. LEARNING PATHWAY:
+• Outline a clear progression path for ${preferences.subjects[0]}
+• Break down into weekly milestones
+• Align with ${preferences.difficultyLevel} level
+
+2. ${preferences.learningStyle.toUpperCase()} LEARNING STRATEGIES:
+• List specific techniques that match their learning style
+• Include practical examples
+• Suggest tools and methods
+
+3. ACHIEVABLE MILESTONES:
+• Weekly goals
+• Monthly targets
+• Assessment checkpoints
+
+4. PRACTICAL EXERCISES:
+• Daily practice tasks
+• Weekly assignments
+• Interactive projects
+
+5. TIME MANAGEMENT:
+• Suggested study schedule
+• Break intervals
+• Review periods
+
+Separate your response with "RECOMMENDED RESOURCES:" and then list:
+• Online platforms
+• Tools and applications
+• Reference materials
+• Practice resources
+
+Keep each bullet point concise and actionable. Format everything clearly with bullet points (•).
 `;
 
   const result = await model.generateContent(prompt);
@@ -34,7 +59,7 @@ Format the response to be directly applicable and actionable.
   const text = response.text();
 
   // Split the response into recommendation and resources sections
-  const sections = text.split('\n\nRecommended Resources:');
+  const sections = text.split('RECOMMENDED RESOURCES:');
   const recommendation = sections[0].trim();
   const resources = sections.length > 1 ? sections[1].trim() : '';
 
