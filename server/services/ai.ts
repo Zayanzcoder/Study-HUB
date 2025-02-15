@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Initialize with environment variable
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function generateStudyRecommendation(preferences: {
   subjects: string[];
@@ -8,9 +9,15 @@ export async function generateStudyRecommendation(preferences: {
   studyGoals: string;
   difficultyLevel: string;
 }) {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  // Validate API key
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured');
+  }
 
-  const prompt = `
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    const prompt = `
 As an expert CBSE/NCERT curriculum advisor, create a detailed, personalized study recommendation for an Indian student with the following preferences:
 
 Learning Style: ${preferences.learningStyle}
@@ -64,44 +71,48 @@ Keep the format clean with following rules:
 5. Focus on practical, actionable steps aligned with CBSE/NCERT standards
 `;
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  const text = response.text();
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
 
-  // Split the response into recommendation and resources sections
-  const sections = text.split('RECOMMENDED STUDY MATERIALS:');
-  let recommendation = sections[0].trim();
-  let resources = sections.length > 1 ? sections[1].trim() : '';
+    // Split the response into recommendation and resources sections
+    const sections = text.split('RECOMMENDED STUDY MATERIALS:');
+    let recommendation = sections[0].trim();
+    let resources = sections.length > 1 ? sections[1].trim() : '';
 
-  // Clean up the formatting
-  recommendation = recommendation
-    .replace(/\*\*/g, '') // Remove any ** characters
-    .replace(/•/g, '-')   // Replace bullets with dashes
-    .split('\n')
-    .map(line => {
-      if (line.trim().startsWith('-')) {
-        return '   ' + line.trim(); // Add proper indentation
-      }
-      return line;
-    })
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n'); // Replace multiple blank lines with double line breaks
+    // Clean up the formatting
+    recommendation = recommendation
+      .replace(/\*\*/g, '') // Remove any ** characters
+      .replace(/•/g, '-')   // Replace bullets with dashes
+      .split('\n')
+      .map(line => {
+        if (line.trim().startsWith('-')) {
+          return '   ' + line.trim(); // Add proper indentation
+        }
+        return line;
+      })
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n'); // Replace multiple blank lines with double line breaks
 
-  resources = resources
-    .replace(/\*\*/g, '')
-    .replace(/•/g, '-')
-    .split('\n')
-    .map(line => {
-      if (line.trim().startsWith('-')) {
-        return '   ' + line.trim();
-      }
-      return line;
-    })
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n');
+    resources = resources
+      .replace(/\*\*/g, '')
+      .replace(/•/g, '-')
+      .split('\n')
+      .map(line => {
+        if (line.trim().startsWith('-')) {
+          return '   ' + line.trim();
+        }
+        return line;
+      })
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n');
 
-  return {
-    recommendation,
-    resources,
-  };
+    return {
+      recommendation,
+      resources,
+    };
+  } catch (error: any) {
+    console.error('Gemini API error:', error);
+    throw new Error(`Failed to generate study recommendation: ${error.message}`);
+  }
 }
