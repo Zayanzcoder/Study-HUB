@@ -289,16 +289,16 @@ export function registerRoutes(app: Express) {
     // If this is the first message, return the welcome message
     if (!req.body.message) {
       return res.json({ 
-        response: `Hi there! I'm Zayan, your personal study companion at Study Hub! 👋
-        
+        response: `Hi there! I'm Zoha, your personal study companion at Study Hub! 👋
+
         I'm here to help you excel in your CBSE/NCERT studies. Whether you need help understanding concepts, creating study plans, or preparing for exams, I'm here to support you.
-        
+
         What would you like help with today? You can:
         - Ask questions about your NCERT subjects
         - Get help with specific topics or concepts
         - Request study tips and strategies
         - Get guidance on exam preparation
-        
+
         Feel free to ask me anything!`
       });
     }
