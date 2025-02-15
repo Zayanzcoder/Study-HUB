@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { insertTaskSchema, Task } from "@shared/schema";
+import { insertTaskSchema, type Task } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +68,7 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
         setDate(new Date(task.dueDate));
       }
     }
-  }, [task]);
+  }, [task, form]);
 
   const mutation = useMutation({
     mutationFn: async (values: any) => {
@@ -109,9 +109,13 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
     },
   });
 
-  function onSubmit(values: any) {
-    mutation.mutate(values);
-  }
+  const onSubmit = async (values: any) => {
+    try {
+      await mutation.mutateAsync(values);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
