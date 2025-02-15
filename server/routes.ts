@@ -243,11 +243,39 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Temporarily disabled AI chat
+  // Enable AI chat with welcome message
   app.post("/api/ai/chat", async (req, res) => {
-    res.json({ 
-      response: "AI chat is temporarily unavailable." 
-    });
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // If this is the first message, return the welcome message
+    if (!req.body.message) {
+      return res.json({ 
+        response: `Hi there! I'm Zayan, your personal study companion at Study Hub! 👋
+
+I'm here to help you excel in your CBSE/NCERT studies. Whether you need help understanding concepts, creating study plans, or preparing for exams, I'm here to support you.
+
+What would you like help with today? You can:
+- Ask questions about your NCERT subjects
+- Get help with specific topics or concepts
+- Request study tips and strategies
+- Get guidance on exam preparation
+
+Feel free to ask me anything!`
+      });
+    }
+
+    // Handle regular chat messages here when we implement the full chat functionality
+    try {
+      // For now, return a placeholder message
+      res.json({ 
+        response: "I'm currently being upgraded to better assist you. Please try the AI Study Recommendations feature for personalized study help!" 
+      });
+    } catch (error) {
+      console.error('AI Chat error:', error);
+      res.status(500).json({ error: 'Failed to process chat message' });
+    }
   });
 
   const httpServer = createServer(app);
