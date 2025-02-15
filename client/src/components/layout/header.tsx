@@ -67,8 +67,8 @@ export function Header({ onLogout }: HeaderProps) {
           description: "You have been logged out of your account",
         });
 
-        // Finally redirect to home page
-        window.location.href = '/';
+        // Use wouter's setLocation instead of window.location
+        setLocation('/');
       } else {
         throw new Error('Logout failed');
       }
