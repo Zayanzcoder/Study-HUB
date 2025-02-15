@@ -7,14 +7,15 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { ListTodo, StickyNote, MessageSquare, Home, BookOpen } from "lucide-react";
+import { ListTodo, StickyNote, MessageSquare, Home, BookOpen, BookMarked } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/notes", label: "Notes", icon: StickyNote },
   { href: "/practice-tests", label: "Practice Tests", icon: BookOpen },
-  { href: "/ai-recommendations", label: "Study AI", icon: MessageSquare },
+  { href: "/resources", label: "Resources", icon: BookMarked },
+  { href: "/ai-chat", label: "AI Chat", icon: MessageSquare },
 ];
 
 export function Navbar() {
