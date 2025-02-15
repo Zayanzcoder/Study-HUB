@@ -11,47 +11,52 @@ export async function generateStudyRecommendation(preferences: {
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
   const prompt = `
-As an expert AI tutor, create a detailed, personalized study recommendation for a student with the following preferences:
+As an expert CBSE/NCERT curriculum advisor, create a detailed, personalized study recommendation for an Indian student with the following preferences:
 
 Learning Style: ${preferences.learningStyle}
 Difficulty Level: ${preferences.difficultyLevel}
 Study Goals: ${preferences.studyGoals}
 Subjects: ${preferences.subjects.join(', ')}
 
-Structure your response in the following format, using bullet points and clear sections:
+Structure your response focusing on CBSE/NCERT curriculum in the following format:
 
-1. LEARNING PATHWAY:
-• Outline a clear progression path for ${preferences.subjects[0]}
-• Break down into weekly milestones
-• Align with ${preferences.difficultyLevel} level
+1) NCERT Chapter Progression:
+- Current chapter focus points
+- Key NCERT concepts to master
+- Previous year question analysis
+- Important formulas and theorems (if applicable)
 
-2. ${preferences.learningStyle.toUpperCase()} LEARNING STRATEGIES:
-• List specific techniques that match their learning style
-• Include practical examples
-• Suggest tools and methods
+2) ${preferences.learningStyle.toUpperCase()} Learning Approach:
+- NCERT example-based learning methods
+- Practice questions from NCERT exemplar
+- Subject-specific learning techniques
+- Diagram/concept map suggestions
 
-3. ACHIEVABLE MILESTONES:
-• Weekly goals
-• Monthly targets
-• Assessment checkpoints
+3) Weekly Study Plan:
+- Monday to Sunday schedule
+- NCERT chapter-wise breakup
+- Practice session timings
+- Revision blocks
 
-4. PRACTICAL EXERCISES:
-• Daily practice tasks
-• Weekly assignments
-• Interactive projects
+4) Practice Strategy:
+- NCERT exercise questions
+- NCERT exemplar problems
+- Previous years' board questions
+- Sample paper practice schedule
 
-5. TIME MANAGEMENT:
-• Suggested study schedule
-• Break intervals
-• Review periods
+5) Test Preparation:
+- Weekly test schedule
+- Monthly assessment plan
+- NCERT-based mock tests
+- Performance tracking method
 
-Separate your response with "RECOMMENDED RESOURCES:" and then list:
-• Online platforms
-• Tools and applications
-• Reference materials
-• Practice resources
+After this, write "RECOMMENDED STUDY MATERIALS:" and list:
+- Required NCERT textbooks
+- Reference books (specific Indian editions)
+- Online resources (Indian educational platforms)
+- Practice material sources
 
-Keep each bullet point concise and actionable. Format everything clearly with bullet points (•).
+Keep the format clean with proper bullet points (-) and clear section headers. Focus on practical, actionable steps aligned with CBSE/NCERT standards.
 `;
 
   const result = await model.generateContent(prompt);
@@ -59,7 +64,7 @@ Keep each bullet point concise and actionable. Format everything clearly with bu
   const text = response.text();
 
   // Split the response into recommendation and resources sections
-  const sections = text.split('RECOMMENDED RESOURCES:');
+  const sections = text.split('RECOMMENDED STUDY MATERIALS:');
   const recommendation = sections[0].trim();
   const resources = sections.length > 1 ? sections[1].trim() : '';
 
