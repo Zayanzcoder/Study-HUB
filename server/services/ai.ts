@@ -70,8 +70,35 @@ Keep the format clean with following rules:
 
   // Split the response into recommendation and resources sections
   const sections = text.split('RECOMMENDED STUDY MATERIALS:');
-  const recommendation = sections[0].trim();
-  const resources = sections.length > 1 ? sections[1].trim() : '';
+  let recommendation = sections[0].trim();
+  let resources = sections.length > 1 ? sections[1].trim() : '';
+
+  // Clean up the formatting
+  recommendation = recommendation
+    .replace(/\*\*/g, '') // Remove any ** characters
+    .replace(/•/g, '-')   // Replace bullets with dashes
+    .split('\n')
+    .map(line => {
+      if (line.trim().startsWith('-')) {
+        return '   ' + line.trim(); // Add proper indentation
+      }
+      return line;
+    })
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n'); // Replace multiple blank lines with double line breaks
+
+  resources = resources
+    .replace(/\*\*/g, '')
+    .replace(/•/g, '-')
+    .split('\n')
+    .map(line => {
+      if (line.trim().startsWith('-')) {
+        return '   ' + line.trim();
+      }
+      return line;
+    })
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n');
 
   return {
     recommendation,

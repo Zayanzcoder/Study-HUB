@@ -113,6 +113,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(studyRecommendations.userId, userId))
       .orderBy(studyRecommendations.createdAt);
   }
+
+  async deleteRecommendation(id: number): Promise<void> {
+    await db.delete(studyRecommendations).where(eq(studyRecommendations.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();

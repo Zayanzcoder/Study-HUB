@@ -229,6 +229,20 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.delete('/api/recommendations/:id', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteRecommendation(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting recommendation:', error);
+      res.status(500).json({ error: 'Failed to delete recommendation' });
+    }
+  });
+
   // Temporarily disabled AI chat
   app.post("/api/ai/chat", async (req, res) => {
     res.json({ 

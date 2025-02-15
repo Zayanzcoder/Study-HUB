@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { StudyPreferences, StudyRecommendation } from "@shared/schema";
-import { Loader2, Brain, Book, Target } from "lucide-react";
+import { Loader2, Brain, Book, Target, Trash2 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function AIRecommendations() {
@@ -69,6 +69,20 @@ export default function AIRecommendations() {
     },
   });
 
+  // Delete recommendation mutation
+  const deleteRecommendationMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/recommendations/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recommendations"] });
+      toast({
+        title: "Recommendation deleted",
+        description: "The study recommendation has been removed.",
+      });
+    },
+  });
+
   const addSubject = () => {
     if (newSubject && !subjects.includes(newSubject)) {
       const updatedSubjects = [...subjects, newSubject];
@@ -91,6 +105,15 @@ export default function AIRecommendations() {
       studyGoals,
       difficultyLevel
     });
+  };
+
+  // Format text to preserve newlines and indentation
+  const formatText = (text: string) => {
+    return text.split('\n').map((line, i) => (
+      <div key={i} style={{ whiteSpace: 'pre-wrap' }} className="my-0.5">
+        {line}
+      </div>
+    ));
   };
 
   if (preferencesLoading) {
@@ -238,18 +261,32 @@ export default function AIRecommendations() {
               recommendations.map((rec) => (
                 <Card key={rec.id} className="bg-secondary">
                   <CardContent className="p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Book className="h-4 w-4" />
-                      <h3 className="font-semibold">{rec.subject}</h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-primary">
+                        <Book className="h-4 w-4" />
+                        <h3 className="font-semibold">{rec.subject}</h3>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteRecommendationMutation.mutate(rec.id)}
+                        disabled={deleteRecommendationMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     </div>
-                    <p className="text-sm">{rec.recommendation}</p>
+                    <div className="text-sm whitespace-pre-wrap font-mono">
+                      {formatText(rec.recommendation)}
+                    </div>
                     {rec.resources && (
                       <div className="pt-2">
                         <h4 className="text-sm font-medium flex items-center gap-2">
                           <Target className="h-4 w-4" />
                           Recommended Resources:
                         </h4>
-                        <p className="text-sm text-muted-foreground">{rec.resources}</p>
+                        <div className="text-sm text-muted-foreground whitespace-pre-wrap font-mono">
+                          {formatText(rec.resources)}
+                        </div>
                       </div>
                     )}
                   </CardContent>
