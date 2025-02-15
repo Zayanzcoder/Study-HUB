@@ -157,16 +157,34 @@ export function registerRoutes(app: Express) {
       // Get user's study preferences for context
       const preferences = await storage.getStudyPreferences(req.user.id);
 
-      // Generate note content using Gemini
-      const noteContent = await generateStudyNotes(topic, {
-        learningStyle: preferences?.learningStyle || 'visual',
-        difficultyLevel: preferences?.difficultyLevel || 'intermediate'
-      });
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(503).json({ 
+          error: 'AI Service Unavailable', 
+          message: 'The AI note generation service is temporarily unavailable. Please try again later.'
+        });
+      }
 
-      res.json({ content: noteContent });
-    } catch (error) {
+      // Generate note content using Gemini
+      try {
+        const noteContent = await generateStudyNotes(topic, {
+          learningStyle: preferences?.learningStyle || 'visual',
+          difficultyLevel: preferences?.difficultyLevel || 'intermediate'
+        });
+
+        res.json({ content: noteContent });
+      } catch (aiError: any) {
+        console.error('AI Service error:', aiError);
+        return res.status(503).json({ 
+          error: 'AI Service Error', 
+          message: 'Failed to generate notes. Our AI service is experiencing issues. Please try again later.'
+        });
+      }
+    } catch (error: any) {
       console.error('Note generation error:', error);
-      res.status(500).json({ error: 'Failed to generate note content' });
+      res.status(500).json({ 
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred while generating notes.'
+      });
     }
   });
 

@@ -121,60 +121,77 @@ export async function generateStudyNotes(topic: string, preferences: {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-Create detailed and organized study notes for a CBSE/NCERT student on the topic: "${topic}"
+Generate comprehensive NCERT/CBSE study notes for the topic: "${topic}"
 
 Learning Style: ${preferences.learningStyle}
 Difficulty Level: ${preferences.difficultyLevel}
 
-Format the notes in the following structure:
+Instructions:
+- Focus on creating detailed study notes, not recommendations
+- Use clear, concise explanations
+- Include NCERT/CBSE specific content
+- Format with proper headings and subheadings
 
-1. TOPIC OVERVIEW
-   - Brief introduction
-   - Key concepts covered
-   - Prerequisites (if any)
+Structure the notes as follows:
 
-2. MAIN CONCEPTS
-   - Detailed explanations
-   - Important definitions
-   - Formulas and their applications (if applicable)
-   - Step-by-step explanations of complex ideas
+1. TOPIC INTRODUCTION
+   - Definition and basic concept
+   - Importance in NCERT curriculum
+   - Related NCERT chapters
 
-3. EXAMPLES AND ILLUSTRATIONS
-   - NCERT-based examples
-   - Step-by-step solutions
+2. KEY CONCEPTS
+   - Main points and theories
+   - Important formulas (if applicable)
+   - Definitions and terminology
+   - Step-by-step concept breakdowns
+
+3. DETAILED EXPLANATIONS
+   - In-depth analysis of each concept
+   - NCERT examples and their solutions
+   - Visual descriptions (diagrams, charts, etc.)
    - Common misconceptions and clarifications
 
-4. KEY POINTS TO REMEMBER
-   - Important facts
-   - Quick revision points
-   - Mnemonics or memory aids (if applicable)
+4. PRACTICAL APPLICATIONS
+   - Real-world examples
+   - NCERT exercise problems
+   - Step-by-step problem solving
+   - Practice questions with solutions
 
-5. PRACTICE QUESTIONS
-   - NCERT exercise questions
-   - Previous years' questions on this topic
-   - Quick self-assessment questions
+5. QUICK REVISION
+   - Summary points
+   - Important formulas and facts
+   - Memory aids and mnemonics
+   - Key terms and definitions
 
-Please structure the content clearly with proper headings and bullet points.
-Focus on clarity and accuracy according to NCERT/CBSE curriculum standards.
-Include relevant diagrams' descriptions where necessary.`;
+Format Requirements:
+- Use clear headings for each section
+- Include bullet points for better readability
+- Maintain consistent indentation
+- Add line breaks between sections`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // Clean up the formatting
+    // Clean up and format the notes
     const formattedNotes = text
       .replace(/\*\*/g, '')
       .replace(/•/g, '-')
       .split('\n')
       .map(line => {
+        // Add proper indentation for bullet points
         if (line.trim().startsWith('-')) {
           return '   ' + line.trim();
+        }
+        // Add spacing for main headers
+        if (line.trim().match(/^\d+\./)) {
+          return '\n' + line.trim();
         }
         return line;
       })
       .join('\n')
-      .replace(/\n{3,}/g, '\n\n');
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
 
     return formattedNotes;
   } catch (error: any) {
