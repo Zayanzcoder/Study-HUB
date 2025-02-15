@@ -49,7 +49,7 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
       description: "",
       priority: "medium",
       status: "pending",
-      userId: 1, // Hardcoded for demo
+      userId: "1", // Convert to string to match schema
       dueDate: null,
     },
   });
@@ -72,26 +72,24 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (values: any) => {
-      try {
-        const formattedValues = {
-          ...values,
-          dueDate: date ? date.toISOString() : null,
-          description: values.description || null,
-        };
+      const formattedValues = {
+        ...values,
+        dueDate: date ? date.toISOString() : null,
+        description: values.description || null,
+      };
 
-        const method = isEditing ? "PATCH" : "POST";
-        const endpoint = isEditing ? `/api/tasks/${task.id}` : "/api/tasks";
+      const response = await apiRequest(
+        isEditing ? "PATCH" : "POST",
+        isEditing ? `/api/tasks/${task.id}` : "/api/tasks",
+        formattedValues
+      );
 
-        const res = await apiRequest(method, endpoint, formattedValues);
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.details || `Failed to ${isEditing ? 'update' : 'create'} task`);
-        }
-        return res.json();
-      } catch (error: any) {
-        console.error("Task mutation error:", error);
-        throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || `Failed to ${isEditing ? 'update' : 'create'} task`);
       }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/1"] });
@@ -101,6 +99,7 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
       setDate(undefined);
     },
     onError: (error: any) => {
+      console.error('Task mutation error:', error);
       toast({
         title: `Failed to ${isEditing ? 'update' : 'create'} task`,
         description: error.message || `An error occurred while ${isEditing ? 'updating' : 'creating'} the task`,
@@ -109,13 +108,14 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
     },
   });
 
-  const onSubmit = async (values: any) => {
+  async function onSubmit(values: any) {
     try {
       await mutation.mutateAsync(values);
     } catch (error) {
+      // Error is already handled in mutation.onError
       console.error("Form submission error:", error);
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

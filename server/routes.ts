@@ -60,27 +60,38 @@ export function registerRoutes(app: Express) {
   app.post("/api/tasks", async (req, res) => {
     try {
       const task = insertTaskSchema.parse(req.body);
-      const created = await storage.createTask(task);
+      // Ensure task.userId is a string
+      const created = await storage.createTask({
+        ...task,
+        userId: String(task.userId)
+      });
       res.json(created);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Task creation error:", error);
       res.status(400).json({ error: "Invalid task data", details: error.message });
     }
   });
 
   app.get("/api/tasks/:userId", async (req, res) => {
-    const userId = parseInt(req.params.userId);
-    const tasks = await storage.getUserTasks(userId);
-    res.json(tasks);
+    try {
+      const userId = req.params.userId;
+      const tasks = await storage.getUserTasks(userId);
+      res.json(tasks);
+    } catch (error: any) {
+      console.error("Error fetching tasks:", error);
+      res.status(500).json({ error: "Failed to fetch tasks", details: error.message });
+    }
   });
 
-  app.patch("/api/tasks/:id/complete", async (req, res) => {
+  app.patch("/api/tasks/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updated = await storage.updateTask(id, { status: "completed" });
+      const updates = req.body;
+      const updated = await storage.updateTask(id, updates);
       res.json(updated);
-    } catch (error) {
-      res.status(404).json({ error: "Task not found" });
+    } catch (error: any) {
+      console.error("Task update error:", error);
+      res.status(404).json({ error: "Task not found", details: error.message });
     }
   });
 
@@ -198,42 +209,42 @@ export function registerRoutes(app: Express) {
       const recommendation = await storage.createRecommendation(req.user.id, {
         subject: preferences.subjects?.[0] || 'General',
         recommendation: `Based on your ${preferences.learningStyle} learning style and ${preferences.difficultyLevel} difficulty preference, here's a detailed study plan:
-
-1. Primary Focus Areas:
-   - Key concepts in ${preferences.subjects?.[0] || 'your chosen subject'}
-   - Practice exercises aligned with your current level
-   - Interactive learning materials
-
-2. Study Schedule:
-   - Break down topics into manageable chunks
-   - Allocate specific time blocks for different learning activities
-   - Include regular review sessions
-
-3. Learning Resources:
-   - Interactive online courses from platforms like Coursera and edX
-   - Practice problems from Khan Academy
-   - Supplementary video tutorials
-   - Peer study groups for collaborative learning
-
-4. Progress Tracking:
-   - Regular self-assessments
-   - Practice tests
-   - Project-based learning activities`,
+201:
+202:1. Primary Focus Areas:
+203:   - Key concepts in ${preferences.subjects?.[0] || 'your chosen subject'}
+204:   - Practice exercises aligned with your current level
+205:   - Interactive learning materials
+206:
+207:2. Study Schedule:
+208:   - Break down topics into manageable chunks
+209:   - Allocate specific time blocks for different learning activities
+210:   - Include regular review sessions
+211:
+212:3. Learning Resources:
+213:   - Interactive online courses from platforms like Coursera and edX
+214:   - Practice problems from Khan Academy
+215:   - Supplementary video tutorials
+216:   - Peer study groups for collaborative learning
+217:
+218:4. Progress Tracking:
+219:   - Regular self-assessments
+220:   - Practice tests
+221:   - Project-based learning activities`,
         resources: `
-1. Online Platforms:
-   - Khan Academy: Interactive exercises and video tutorials
-   - Coursera: Professional certificates and specialized courses
-   - edX: University-level courses
-
-2. Tools:
-   - Anki: For spaced repetition learning
-   - Notion: For organizing study materials
-   - Microsoft OneNote/Evernote: For detailed note-taking
-
-3. Additional Resources:
-   - Subject-specific textbooks
-   - Online forums for peer discussion
-   - Educational YouTube channels`,
+223:1. Online Platforms:
+224:   - Khan Academy: Interactive exercises and video tutorials
+225:   - Coursera: Professional certificates and specialized courses
+226:   - edX: University-level courses
+227:
+228:2. Tools:
+229:   - Anki: For spaced repetition learning
+230:   - Notion: For organizing study materials
+231:   - Microsoft OneNote/Evernote: For detailed note-taking
+232:
+233:3. Additional Resources:
+234:   - Subject-specific textbooks
+235:   - Online forums for peer discussion
+236:   - Educational YouTube channels`,
         status: 'active'
       });
 
