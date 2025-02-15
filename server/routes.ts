@@ -5,7 +5,7 @@ import session from 'express-session';
 import { storage } from "./storage";
 import { insertTaskSchema, insertNoteSchema, insertStudyPreferencesSchema, User } from "@shared/schema";
 import { z } from "zod";
-import { generateStudyRecommendation } from './services/ai';
+import { generateStudyRecommendation, generateStudyNotes } from './services/ai';
 
 declare global {
   namespace Express {
@@ -158,14 +158,12 @@ export function registerRoutes(app: Express) {
       const preferences = await storage.getStudyPreferences(req.user.id);
 
       // Generate note content using Gemini
-      const { recommendation } = await generateStudyRecommendation({
-        subjects: [topic],
+      const noteContent = await generateStudyNotes(topic, {
         learningStyle: preferences?.learningStyle || 'visual',
-        studyGoals: `Generate detailed study notes about: ${topic}`,
         difficultyLevel: preferences?.difficultyLevel || 'intermediate'
       });
 
-      res.json({ content: recommendation });
+      res.json({ content: noteContent });
     } catch (error) {
       console.error('Note generation error:', error);
       res.status(500).json({ error: 'Failed to generate note content' });
@@ -274,16 +272,16 @@ export function registerRoutes(app: Express) {
     if (!req.body.message) {
       return res.json({ 
         response: `Hi there! I'm Zayan, your personal study companion at Study Hub! 👋
-
-I'm here to help you excel in your CBSE/NCERT studies. Whether you need help understanding concepts, creating study plans, or preparing for exams, I'm here to support you.
-
-What would you like help with today? You can:
-- Ask questions about your NCERT subjects
-- Get help with specific topics or concepts
-- Request study tips and strategies
-- Get guidance on exam preparation
-
-Feel free to ask me anything!`
+        
+        I'm here to help you excel in your CBSE/NCERT studies. Whether you need help understanding concepts, creating study plans, or preparing for exams, I'm here to support you.
+        
+        What would you like help with today? You can:
+        - Ask questions about your NCERT subjects
+        - Get help with specific topics or concepts
+        - Request study tips and strategies
+        - Get guidance on exam preparation
+        
+        Feel free to ask me anything!`
       });
     }
 

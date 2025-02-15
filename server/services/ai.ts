@@ -61,15 +61,7 @@ After this, write "RECOMMENDED STUDY MATERIALS:" and list:
    - Required NCERT textbooks
    - Reference books (specific Indian editions)
    - Online resources (Indian educational platforms)
-   - Practice material sources
-
-Keep the format clean with following rules:
-1. Use proper indentation (3 spaces) for bullet points
-2. Add blank lines between main sections
-3. Use consistent "-" for all bullet points
-4. Maintain proper line spacing between points
-5. Focus on practical, actionable steps aligned with CBSE/NCERT standards
-`;
+   - Practice material sources`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -82,17 +74,17 @@ Keep the format clean with following rules:
 
     // Clean up the formatting
     recommendation = recommendation
-      .replace(/\*\*/g, '') // Remove any ** characters
-      .replace(/•/g, '-')   // Replace bullets with dashes
+      .replace(/\*\*/g, '')
+      .replace(/•/g, '-')
       .split('\n')
       .map(line => {
         if (line.trim().startsWith('-')) {
-          return '   ' + line.trim(); // Add proper indentation
+          return '   ' + line.trim();
         }
         return line;
       })
       .join('\n')
-      .replace(/\n{3,}/g, '\n\n'); // Replace multiple blank lines with double line breaks
+      .replace(/\n{3,}/g, '\n\n');
 
     resources = resources
       .replace(/\*\*/g, '')
@@ -114,5 +106,79 @@ Keep the format clean with following rules:
   } catch (error: any) {
     console.error('Gemini API error:', error);
     throw new Error(`Failed to generate study recommendation: ${error.message}`);
+  }
+}
+
+export async function generateStudyNotes(topic: string, preferences: {
+  learningStyle: string;
+  difficultyLevel: string;
+}) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    const prompt = `
+Create detailed and organized study notes for a CBSE/NCERT student on the topic: "${topic}"
+
+Learning Style: ${preferences.learningStyle}
+Difficulty Level: ${preferences.difficultyLevel}
+
+Format the notes in the following structure:
+
+1. TOPIC OVERVIEW
+   - Brief introduction
+   - Key concepts covered
+   - Prerequisites (if any)
+
+2. MAIN CONCEPTS
+   - Detailed explanations
+   - Important definitions
+   - Formulas and their applications (if applicable)
+   - Step-by-step explanations of complex ideas
+
+3. EXAMPLES AND ILLUSTRATIONS
+   - NCERT-based examples
+   - Step-by-step solutions
+   - Common misconceptions and clarifications
+
+4. KEY POINTS TO REMEMBER
+   - Important facts
+   - Quick revision points
+   - Mnemonics or memory aids (if applicable)
+
+5. PRACTICE QUESTIONS
+   - NCERT exercise questions
+   - Previous years' questions on this topic
+   - Quick self-assessment questions
+
+Please structure the content clearly with proper headings and bullet points.
+Focus on clarity and accuracy according to NCERT/CBSE curriculum standards.
+Include relevant diagrams' descriptions where necessary.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean up the formatting
+    const formattedNotes = text
+      .replace(/\*\*/g, '')
+      .replace(/•/g, '-')
+      .split('\n')
+      .map(line => {
+        if (line.trim().startsWith('-')) {
+          return '   ' + line.trim();
+        }
+        return line;
+      })
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n');
+
+    return formattedNotes;
+  } catch (error: any) {
+    console.error('Gemini API error:', error);
+    throw new Error(`Failed to generate study notes: ${error.message}`);
   }
 }
