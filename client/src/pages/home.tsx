@@ -82,32 +82,25 @@ export default function Home() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <h3 className="text-2xl font-semibold mb-4">Meet Our Founder</h3>
-                <div className="flex items-start gap-6">
-                  <img 
-                    src="1739543476017.jpg"
-                    alt="Founder"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-white/20"
-                  />
-                  <div className="space-y-2">
-                    <p className="text-gray-300">
-                      Hi, I'm Zayan—the person behind StudyHub. I created this platform to empower students 
-                      with a smart, AI-driven assistant that streamlines daily tasks, note-taking, and 
-                      personalized recommendations. As someone who's experienced the challenges of juggling 
-                      academic life, I built StudyHub to help you focus more on learning and less on managing 
-                      the chaos. Here, every feature is designed with your needs in mind, making your journey 
-                      through school smoother and more efficient. Thanks for being a part of this community, 
-                      and I look forward to growing and learning alongside you.
-                    </p>
-                    <div className="flex items-center gap-2 mt-4">
-                      <Mail className="h-4 w-4 text-gray-300" />
-                      <a href="mailto:zayanzubair36@gmail.com" className="text-gray-300 hover:text-white transition-colors">
-                        zayanzubair36@gmail.com
-                      </a>
-                    </div>
-                    <p className="text-gray-300 mt-4 font-light italic">
-                      For any inquiries or collaborations, feel free to reach out.
-                    </p>
+                <div className="space-y-2">
+                  <p className="text-gray-300">
+                    Hi, I'm Zayan—the person behind StudyHub. I created this platform to empower students 
+                    with a smart, AI-driven assistant that streamlines daily tasks, note-taking, and 
+                    personalized recommendations. As someone who's experienced the challenges of juggling 
+                    academic life, I built StudyHub to help you focus more on learning and less on managing 
+                    the chaos. Here, every feature is designed with your needs in mind, making your journey 
+                    through school smoother and more efficient. Thanks for being a part of this community, 
+                    and I look forward to growing and learning alongside you.
+                  </p>
+                  <div className="flex items-center gap-2 mt-4">
+                    <Mail className="h-4 w-4 text-gray-300" />
+                    <a href="mailto:zayanzubair36@gmail.com" className="text-gray-300 hover:text-white transition-colors">
+                      zayanzubair36@gmail.com
+                    </a>
                   </div>
+                  <p className="text-gray-300 mt-4 font-light italic">
+                    For any inquiries or collaborations, feel free to reach out.
+                  </p>
                 </div>
               </div>
             </CardContent>
