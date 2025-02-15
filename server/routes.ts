@@ -15,6 +15,7 @@ declare global {
   }
 }
 
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function analyzeChatMessage(message: string): Promise<string> {
@@ -24,21 +25,22 @@ async function analyzeChatMessage(message: string): Promise<string> {
       messages: [
         {
           role: "system",
-          content: "You are a helpful AI tutor specializing in CBSE/NCERT curriculum. Help students understand concepts, solve problems, and provide study guidance. Keep responses focused on academic content and learning."
+          content: "You are a helpful AI tutor specializing in CBSE/NCERT curriculum. Help students understand concepts, solve problems, and provide study guidance. Keep responses focused on academic content and learning. Try to give examples from NCERT textbooks when possible."
         },
         {
           role: "user",
           content: message
         }
       ],
+      max_tokens: 500,
       temperature: 0.7,
-      max_tokens: 500
+      presence_penalty: 0.6
     });
 
     return response.choices[0].message.content || "I apologize, I couldn't process that request.";
   } catch (error: any) {
     console.error("OpenAI API error:", error);
-    return "I'm sorry, I'm having trouble understanding your request. Please try again later.";
+    throw new Error("Failed to process message: " + error.message);
   }
 }
 
@@ -88,6 +90,7 @@ export function registerRoutes(app: Express) {
       });
     }
   });
+
 
   // Auth routes
   app.get('/auth/google',
