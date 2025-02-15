@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/components/ui/login-button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, User, Brain, Sparkles, BookOpen, Clock } from "lucide-react";
+import { Mail, Brain, Sparkles, BookOpen, Instagram } from "lucide-react";
 
 export default function Home() {
   return (
@@ -92,11 +92,19 @@ export default function Home() {
                     through school smoother and more efficient. Thanks for being a part of this community, 
                     and I look forward to growing and learning alongside you.
                   </p>
-                  <div className="flex items-center gap-2 mt-4">
-                    <Mail className="h-4 w-4 text-gray-300" />
-                    <a href="mailto:zayanzubair36@gmail.com" className="text-gray-300 hover:text-white transition-colors">
-                      zayanzubair36@gmail.com
-                    </a>
+                  <div className="flex flex-col gap-2 mt-4">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-300" />
+                      <a href="mailto:zayanzubair36@gmail.com" className="text-gray-300 hover:text-white transition-colors">
+                        zayanzubair36@gmail.com
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Instagram className="h-4 w-4 text-gray-300" />
+                      <a href="https://instagram.com/za.yann9" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                        @za.yann9
+                      </a>
+                    </div>
                   </div>
                   <p className="text-gray-300 mt-4 font-light italic">
                     For any inquiries or collaborations, feel free to reach out.
