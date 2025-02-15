@@ -12,6 +12,7 @@ import AIChat from "@/pages/ai-chat";
 import NotFound from "@/pages/not-found";
 import Profile from "@/pages/profile";
 import AIRecommendations from "@/pages/ai-recommendations";
+import PracticeTests from "@/pages/practice-tests";
 
 function PrivateRoute({ component: Component, isAuthenticated, ...rest }: any) {
   const [, setLocation] = useLocation();
@@ -89,6 +90,16 @@ function Router() {
           component={(props) => (
             <PrivateRoute 
               component={Dashboard} 
+              isAuthenticated={isAuthenticated} 
+              {...props} 
+            />
+          )} 
+        />
+        <Route 
+          path="/practice-tests" 
+          component={(props) => (
+            <PrivateRoute 
+              component={PracticeTests} 
               isAuthenticated={isAuthenticated} 
               {...props} 
             />
