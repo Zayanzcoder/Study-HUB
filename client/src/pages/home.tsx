@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/components/ui/login-button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, User } from "lucide-react";
+import { Mail, User, Brain, Sparkles, BookOpen, Clock } from "lucide-react";
 
 export default function Home() {
   return (
@@ -25,15 +25,27 @@ export default function Home() {
           transition={{ delay: 0.2 }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl font-bold text-white mb-6">Your Personal Study Assistant</h2>
-          <p className="text-xl text-gray-300 mb-8">Organize tasks, take notes, and get AI help - all in one place</p>
+          <h2 className="text-5xl font-bold text-white mb-6">Your AI-Powered Study Assistant</h2>
+          <p className="text-xl text-gray-300 mb-8">Transform your learning with intelligent task management, smart notes, and personalized AI guidance</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
-            { title: "Task Management", description: "Organize and track your study tasks efficiently" },
-            { title: "Smart Notes", description: "Take and share notes with collaborative features" },
-            { title: "AI Chat Assistant", description: "Get instant help with your studies" }
+            { 
+              title: "Smart Task Management",
+              description: "AI-optimized task organization that adapts to your study patterns",
+              icon: Brain
+            },
+            { 
+              title: "Intelligent Notes",
+              description: "Take and share notes with AI-powered insights and suggestions",
+              icon: Sparkles
+            },
+            { 
+              title: "Study AI Assistant",
+              description: "Get personalized study recommendations and instant help with your subjects",
+              icon: BookOpen
+            }
           ].map((feature, i) => (
             <motion.div
               key={feature.title}
@@ -42,7 +54,10 @@ export default function Home() {
               transition={{ delay: 0.4 + i * 0.1 }}
               className="bg-white/10 backdrop-blur-lg rounded-lg p-6 text-white"
             >
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+              <div className="flex items-center gap-3 mb-3">
+                <feature.icon className="h-6 w-6" />
+                <h3 className="text-xl font-semibold">{feature.title}</h3>
+              </div>
               <p className="text-gray-300">{feature.description}</p>
             </motion.div>
           ))}
@@ -57,9 +72,9 @@ export default function Home() {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-4">About StudyHub</h2>
             <p className="text-gray-300 max-w-2xl mx-auto mb-8">
-              StudyHub is your all-in-one study companion, designed to help students stay organized
-              and productive. With our powerful tools and AI assistance, we make studying more
-              efficient and enjoyable.
+              StudyHub combines the power of AI with intuitive study tools to create a seamless learning experience. 
+              Our AI-driven platform adapts to your learning style, offering personalized recommendations, 
+              smart task organization, and intelligent study insights to help you achieve your academic goals.
             </p>
           </div>
 
@@ -75,14 +90,13 @@ export default function Home() {
                   />
                   <div className="space-y-2">
                     <p className="text-gray-300">
-                      I am a high school student currently studying in 11th grade under the CBSE curriculum in Saudi Arabia. 
-                      With a strong interest in technology and cybersecurity, I am preparing to pursue a Computer Science 
-                      degree at RWTH Aachen University in Germany. My focus is on building a career in cybersecurity, and 
-                      I am actively learning and developing skills in this field.
-                    </p>
-                    <p className="text-gray-300 mt-4">
-                      This website is designed to provide students with valuable resources and support for their academic journey. 
-                      My goal is to create a platform that simplifies learning and helps students achieve their academic goals efficiently.
+                      Hi, I'm Zayan—the person behind StudyHub. I created this platform to empower students 
+                      with a smart, AI-driven assistant that streamlines daily tasks, note-taking, and 
+                      personalized recommendations. As someone who's experienced the challenges of juggling 
+                      academic life, I built StudyHub to help you focus more on learning and less on managing 
+                      the chaos. Here, every feature is designed with your needs in mind, making your journey 
+                      through school smoother and more efficient. Thanks for being a part of this community, 
+                      and I look forward to growing and learning alongside you.
                     </p>
                     <div className="flex items-center gap-2 mt-4">
                       <Mail className="h-4 w-4 text-gray-300" />
