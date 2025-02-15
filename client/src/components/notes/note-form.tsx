@@ -17,48 +17,46 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { NoteEditor } from "./note-editor";
+import { Editor } from '@tiptap/react';
 import { Wand2, Loader2 } from "lucide-react";
 import { VoiceRecorder } from "./voice-recorder";
 
 interface NoteFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  selectedNote?: any; // Add type when we implement edit functionality
+  onClose?: () => void;
 }
 
-export function NoteForm({ open, onOpenChange }: NoteFormProps) {
+export function NoteForm({ open, onOpenChange, selectedNote, onClose }: NoteFormProps) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertNoteSchema),
     defaultValues: {
-      title: "",
-      content: "",
-      isPublic: false,
-      userId: 1, // Hardcoded for demo
-      sharedWith: [],
-      topic: "", // Added default value for topic
+      title: selectedNote?.title || "",
+      content: selectedNote?.content || "",
+      isPublic: selectedNote?.isPublic || false,
+      userId: "1", // This will be replaced with actual user ID
+      sharedWith: selectedNote?.sharedWith || [],
+      topic: "", // For AI generation
     },
   });
 
   const createNote = useMutation({
     mutationFn: async (values: any) => {
-      try {
-        const res = await apiRequest("POST", "/api/notes", values);
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.details || "Failed to create note");
-        }
-        return res.json();
-      } catch (error: any) {
-        console.error("Note creation error:", error);
-        throw error;
+      const res = await apiRequest("POST", "/api/notes", values);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.details || "Failed to create note");
       }
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notes/1"] });
       onOpenChange(false);
+      if (onClose) onClose();
       toast({ title: "Note created successfully" });
       form.reset();
     },
@@ -127,9 +125,9 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[725px]">
+      <DialogContent className="sm:max-w-[725px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Note</DialogTitle>
+          <DialogTitle>{selectedNote ? "Edit Note" : "Create New Note"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -146,6 +144,7 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 </FormItem>
               )}
             />
+
             <div className="flex items-center justify-between space-x-2">
               <FormField
                 control={form.control}
@@ -183,9 +182,10 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <NoteEditor
-                      value={field.value}
-                      onChange={field.onChange}
+                    <textarea
+                      {...field}
+                      className="w-full min-h-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Write your note content here..."
                       disabled={createNote.isPending}
                     />
                   </FormControl>
@@ -193,16 +193,7 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 </FormItem>
               )}
             />
-            <div className="flex items-center justify-between space-x-2">
-              <FormLabel>Voice Input</FormLabel>
-              <VoiceRecorder
-                onTranscription={(text) => {
-                  const currentContent = form.getValues("content");
-                  form.setValue("content", currentContent ? `${currentContent}\n\n${text}` : text);
-                }}
-                disabled={createNote.isPending}
-              />
-            </div>
+
             <FormField
               control={form.control}
               name="isPublic"
@@ -224,13 +215,25 @@ export function NoteForm({ open, onOpenChange }: NoteFormProps) {
                 </FormItem>
               )}
             />
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={createNote.isPending}
-            >
-              {createNote.isPending ? "Creating..." : "Create Note"}
-            </Button>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  onOpenChange(false);
+                  if (onClose) onClose();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createNote.isPending}
+              >
+                {createNote.isPending ? "Creating..." : (selectedNote ? "Save Changes" : "Create Note")}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>
